@@ -181,6 +181,34 @@ Sensor data is automatically logged to `data/sensors.csv` with the following col
 
 For testing without physical sensors, disable all sensors in `config.json`. The application will use mock sensors that generate random values.
 
+## On Raspberry
+
+```bash
+sudo apt update
+sudo apt install -y python3-dev python3-venv i2c-tools libatlas-base-dev portaudio19-dev
+```
+
+Clone repo & classic installation
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+
+Add user to I2C bus
+
+```bash
+sudo usermod -aG i2c $USER
+```
+
+Start !
+
+```bash
+python main.py
+```
+
 ## TODO
 
 - [ ] Verify data type and format compliance with requirements specification
