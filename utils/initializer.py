@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from fakes.mock_sensor import MockSensor
 from sensors.bme280_sensor import Bme280Sensor
 from sensors.ltr559_sensor import Ltr559Sensor
@@ -30,28 +31,37 @@ def load_config():
     }
 
 
-def init_sensor(sensor_class, fallback, enabled=True):
-    """Initialize a sensor if enabled, otherwise return the fallback."""
+def init_sensor(sensor_class, enabled=True):
     if not enabled:
-        print(f"{sensor_class.__name__} disabled in configuration.")
-        return fallback
+        print(f"! {sensor_class.__name__} disabled in configuration.")
+        return MockSensor()
+    
     try:
-        return sensor_class()
+        sensor = sensor_class()
+        print(f"{sensor_class.__name__} initialized successfully.")
+        return sensor
     except BaseException as error:
-        print(f"{sensor_class.__name__} unavailable ({error}), mock sensor used.")
-        return fallback
+        print(f"\nFATAL ERROR: {sensor_class.__name__} is ENABLED but unavailable!")
+        print(f"Error details: {error}")
+        print("\nTo fix this issue:")
+        print(f"  1. Disable this sensor in config.json by setting '{sensor_class.__name__.lower()}': false")
+        print("  2. Or check that your hardware is properly connected and drivers are installed")
+        sys.exit(1)
 
 
 def init_all_sensors(config):
-    """Initialize all sensors according to configuration."""
     enabled = config["enabled_sensors"]
-    mock = MockSensor()
     
-    return {
-        "bme280": init_sensor(Bme280Sensor, mock, enabled["bme280"]),
-        "ltr559": init_sensor(Ltr559Sensor, mock, enabled["ltr559"]),
-        "sph0645": init_sensor(Sph0645Sensor, mock, enabled["sph0645"]),
-        "pms5003": init_sensor(Pms5003Sensor, mock, enabled["pms5003"]),
-        "scd30": init_sensor(Scd30Sensor, mock, enabled["scd30"]),
-        "mock": mock,
+    print("\n=== Sensor Initialization ===\n")
+    
+    sensors = {
+        "bme280": init_sensor(Bme280Sensor, enabled["bme280"]),
+        "ltr559": init_sensor(Ltr559Sensor, enabled["ltr559"]),
+        "sph0645": init_sensor(Sph0645Sensor, enabled["sph0645"]),
+        "pms5003": init_sensor(Pms5003Sensor, enabled["pms5003"]),
+        "scd30": init_sensor(Scd30Sensor, enabled["scd30"]),
     }
+    
+    print("\n=== All sensors initialized ===\n")
+    
+    return sensors
