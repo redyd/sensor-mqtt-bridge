@@ -4,7 +4,7 @@ import csv
 import datetime
 import os
 
-DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", "sensors.csv")
+DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.csv")
 
 
 class SensorsExporter:
