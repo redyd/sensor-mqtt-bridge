@@ -3,7 +3,28 @@ from core.command_receiver import CommandReceiver
 from core.sensors_exporter import SensorsExporter
 from utils.initializer import load_config, init_all_sensors
 import time
-import json
+import os
+import platform
+
+
+BANNER = r"""                                                                            
+.oPYo. .oPYo. o    o .oPYo. .oPYo.  .oPYo.    .oPYo.  .oPYo. o ooo.   .oPYo. .oPYo. 
+8      8.     8b   8 8      8    8  8   `8    8   `8  8   `8 8 8  `8. 8    8 8.     
+`Yooo. `boo   8`b  8 `Yooo. 8    8 o8YooP'   o8YooP' o8YooP' 8 8   `8 8      `boo   
+    `8 .P     8 `b 8     `8 8    8  8   `b    8   `b  8   `b 8 8    8 8   oo .P     
+     8 8      8  `b8      8 8    8  8    8    8    8  8    8 8 8   .P 8    8 8      
+`YooP' `YooP' 8   `8 `YooP' `YooP'  8    8    8oooP'  8    8 8 8ooo'  `YooP8 `YooP' 
+:.....::.....:..:::..:.....::.....::..:::..:::......::..:::.........:::....8 :.....:
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::8 :::::::
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::..:::::::      
+"""
+
+
+def clear_screen():
+    if platform.system() == "Windows":
+        os.system('cls')
+    else:
+        os.system('clear')
 
 
 config = load_config()
@@ -37,21 +58,26 @@ sensors_exporter = SensorsExporter(
 
 MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
 FETCH_INTERVAL_SECOND = config["update_interval"]
+log_queue = ["---", "---", "---"]
 
 try:
     while True:
         data = sensors_exporter.export()
-        
-        print("\n" + "="*60)
-        print("Sensor Data:")
-        print("="*60)
-        print(json.dumps(data, indent=2))
-        print("="*60 + "\n")
-        
+        clear_screen()
+
+        print(BANNER)
+        print(f"RUNNING | interval: {FETCH_INTERVAL_SECOND}s | broker: {config['mqtt_broker']}:{config['mqtt_port']}\n")        
+        for key, value in data.items():
+            print(f"  {key:<20} {value}")
+        print("\nlog:")
+        for i, log in enumerate(log_queue):
+            prefix = "> " if i == len(log_queue) - 1 else "  "
+            print(f"{prefix}{log}")
+
         MQTT_CLIENT.send_data("sensors/data", data)
-        print("Data sent to MQTT broker")
-        print(f"Waiting {FETCH_INTERVAL_SECOND} seconds...\n")
-        
+        timestamp = time.strftime("%H:%M:%S")
+        log_queue.pop(0)
+        log_queue.append(f"Data sent at {timestamp}")
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
     print("\nTerminating program...")
