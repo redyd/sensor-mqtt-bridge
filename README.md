@@ -178,10 +178,9 @@ Sensor data is automatically logged to `data/sensors.csv` with the following col
 
 For testing without physical sensors, disable all sensors in `config.json`. The application will use mock sensors that generate random values.
 
-## License
+## TODO
 
-To be defined
-
-## Author
-
-Developed for environmental monitoring systems
+- [ ] Verify data type and format compliance with requirements specification
+- [ ] Define all MQTT topics and command specifications
+- [ ] Define and implement response handlers for all topics and commands
+- [ ] Integrate with dashboard system (data visualization and control interface)
