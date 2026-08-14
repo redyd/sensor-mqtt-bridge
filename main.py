@@ -54,5 +54,6 @@ try:
         
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
-    print("\n⛔ Terminating program...")
+    print("\nTerminating program...")
     MQTT_CLIENT.close()
+    print("Done.")
