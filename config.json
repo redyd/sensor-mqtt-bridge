@@ -1,0 +1,12 @@
+{
+  "enabled_sensors": {
+    "bme280": true,
+    "ltr559": true,
+    "sph0645": false,
+    "pms5003": true,
+    "scd30": true
+  },
+  "mqtt_broker": "192.168.1.46",
+  "mqtt_port": 1883,
+  "update_interval": 2
+}

@@ -48,11 +48,30 @@ pip install paho-mqtt bme280 smbus2 ltr559 pms5003 scd30-i2c numpy sounddevice
 
 ### Configuration
 
-Modifiez l'adresse du broker MQTT dans `main.py` :
+Modifiez le fichier `config.json` pour configurer le broker MQTT et les capteurs :
 
-```python
-mqtt_client = MqttClient("192.168.1.46", 1883, command_receiver)
+```json
+{
+  "enabled_sensors": {
+    "bme280": true,
+    "ltr559": true,
+    "sph0645": false,
+    "pms5003": true,
+    "scd30": true
+  },
+  "mqtt_broker": "192.168.1.46",
+  "mqtt_port": 1883,
+  "update_interval": 2
+}
 ```
+
+**Paramètres** :
+- `enabled_sensors` : Activez/désactivez chaque capteur
+- `mqtt_broker` : Adresse IP du broker MQTT
+- `mqtt_port` : Port du broker MQTT
+- `update_interval` : Intervalle en secondes entre chaque mesure
+
+⚠️ **Note important** : Le capteur microphone (SPH0645) peut interférer avec l'audio Bluetooth. Si vous utilisez des écouteurs Bluetooth, réglez `"sph0645": false` dans la configuration.
 
 ### Lancement
 
@@ -88,55 +107,20 @@ sensor-mqtt-bridge/
 
 ```
 
-## 🔄 Flux de données
+### Extensibilité des commandes
 
+Pour ajouter une nouvelle commande, modifiez `CommandReceiver.SUBSCRIPTIONS` et ajoutez un handler :
+
+```python
+SUBSCRIPTIONS = [
+    ("commandes/status", 0),
+    ("commandes/reset", 1),  # Nouvelle commande
+]
+
+def _handle_reset(self, payload):
+    # Votre logique ici
+    print("Réinitialisation...")
 ```
-┌─────────────────────────────────────────────────────────┐
-│               Capteurs Physiques                         │
-│  (BME280, LTR559, SPH0645, PMS5003, SCD30)              │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-        ┌────────────────────────┐
-        │  CommandReceiver       │
-        │  (Collecte données)    │
-        └────────┬───────────────┘
-                 │
-        ┌────────┴────────┬──────────────┐
-        ▼                 ▼              ▼
-    SensorsExporter   MqttClient   sensors.csv
-    (Traitement)   (Transmission)  (Historique)
-        │                 │
-        └────────┬────────┘
-                 │
-                 ▼
-      ┌──────────────────────┐
-      │   Broker MQTT        │
-      │  (192.168.1.46:1883) │
-      └──────────────────────┘
-```
-
-## 📡 Topics MQTT
-
-### Publication
-
-- **`capteurs/donnees`** : Données de tous les capteurs (JSON)
-  ```json
-  {
-    "timestamp": "2026-08-14T10:30:45.123456",
-    "temperature": 22.5,
-    "pressure": 1013.25,
-    "humidity": 45.6,
-    "light": 450.2,
-    "sound_level": 35.5,
-    "particulate_matter": {"pm1_0": 5, "pm2_5": 8, "pm10": 12},
-    "co2": 520.4
-  }
-  ```
-
-### Souscription
-
-Les topics de commande sont définis dans `CommandReceiver` pour un contrôle à distance.
 
 ## 🛠️ Extension
 
@@ -154,26 +138,14 @@ class MonCapteur:
 2. Ajouter le protocole dans `core/sensors_definitions.py`
 3. Intégrer dans `main.py` et `SensorsExporter`
 
-## 📊 Données enregistrées
-
-Les données sont automatiquement journalisées en CSV avec les colonnes :
-- `timestamp` : Date/heure ISO
-- `temperature` : °C
-- `pressure` : hPa
-- `humidity` : %
-- `light` : Lux
-- `sound_level` : dB
-- `particulate_matter` : JSON avec PM1.0, PM2.5, PM10
-- `co2` : ppm
-
 ## 🔧 Configuration avancée
 
 ### Fréquence d'envoi
 
-Modifiez le délai en secondes dans `main.py` :
+Modifiez `update_interval` dans `config.json` (en secondes) :
 
-```python
-time.sleep(2)  # Intervalle de 2 secondes
+```json
+"update_interval": 5
 ```
 
 ### Chemin d'export CSV
@@ -187,6 +159,24 @@ sensors_exporter = SensorsExporter(
     write_every=1  # Écrire à chaque mesure
 )
 ```
+
+### ⚠️ Problème de Bluetooth
+
+Si votre **Bluetooth s'arrête quand vous lancez le programme**, c'est causé par le **capteur microphone (SPH0645)**. 
+
+La bibliothèque `sounddevice` capture l'audio de l'appareil par défaut et peut interférer avec les appareils Bluetooth.
+
+**Solution** : Désactivez le capteur dans `config.json` :
+
+```json
+{
+  "enabled_sensors": {
+    "sph0645": false
+  }
+}
+```
+
+Alternativement, vous pouvez configurer `sounddevice` pour utiliser un appareil spécifique ou un "dummy device" qui n'interfère pas avec l'audio.
 
 ## 📝 Gestion des erreurs
 

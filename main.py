@@ -1,29 +1,18 @@
 from core.mqtt_client import MqttClient
 from core.command_receiver import CommandReceiver
 from core.sensors_exporter import SensorsExporter
-from sensors.bme280_sensor import Bme280Sensor
-from sensors.ltr559_sensor import Ltr559Sensor
-from sensors.sph0645_sensor import Sph0645Sensor
-from sensors.pms5003_sensor import Pms5003Sensor
-from sensors.scd30_sensor import Scd30Sensor
-from fakes.mock_sensor import MockSensor
+from utils.initializer import load_config, init_all_sensors
 import time
 
 
-def init_sensor(sensor_class, fallback):
-    try:
-        return sensor_class()
-    except BaseException as error:
-        print(f"{sensor_class.__name__} indisponible ({error}), capteur factice utilisé.")
-        return fallback
+config = load_config()
+sensors = init_all_sensors(config)
 
-
-mock = MockSensor()
-bme280_sensor = init_sensor(Bme280Sensor, mock)
-light_sensor = init_sensor(Ltr559Sensor, mock)
-microphone_sensor = init_sensor(Sph0645Sensor, mock)
-particulate_matter_sensor = init_sensor(Pms5003Sensor, mock)
-co2_sensor = init_sensor(Scd30Sensor, mock)
+bme280_sensor = sensors["bme280"]
+light_sensor = sensors["ltr559"]
+microphone_sensor = sensors["sph0645"]
+particulate_matter_sensor = sensors["pms5003"]
+co2_sensor = sensors["scd30"]
 
 command_receiver = CommandReceiver(
     temperature_sensor=bme280_sensor,
@@ -45,16 +34,20 @@ sensors_exporter = SensorsExporter(
     co2_sensor=co2_sensor,
 )
 
-mqtt_client = MqttClient("192.168.1.46", 1883, command_receiver)
+MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
+FETCH_INTERVAL_SECOND = config["update_interval"]
 
 try:
     while True:
         data = sensors_exporter.export()
         print("Données exportées")
-        mqtt_client.send_data("capteurs/donnees", data)
+        print(data)
+        
+        MQTT_CLIENT.send_data("capteurs/donnees", data)
+        
         print("Données envoyées")
         print("En attente...")
-        time.sleep(2)
+        time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
     print("Terminaison du programme...")
-    mqtt_client.close()
+    MQTT_CLIENT.close()
