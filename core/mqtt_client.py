@@ -6,7 +6,7 @@ import json
 
 
 class MqttClient:
-    """Gère la connexion ouverte sur le broker MQTT."""
+    """Manages the open connection to the MQTT broker."""
 
     def __init__(self, broker, port, command_receiver: CommandReceiver):
         self._command_receiver = command_receiver
@@ -18,7 +18,7 @@ class MqttClient:
         self._client.loop_start()
 
     def _on_connect(self, client, userdata, flags, rc):
-        print(f"Connecté au broker, code: {rc}")
+        print(f"Connected to broker, code: {rc}")
         client.subscribe(CommandReceiver.SUBSCRIPTIONS)
 
     def _on_message(self, client, userdata, msg):
@@ -26,7 +26,7 @@ class MqttClient:
             payload = json.loads(msg.payload.decode())
             self._command_receiver.handle(msg.topic, payload)
         except json.JSONDecodeError:
-            print("Message MQTT invalide, ignoré.")
+            print("Invalid MQTT message, ignored.")
 
     def send_data(self, topic, data):
         self._client.publish(topic, json.dumps(data))
@@ -34,4 +34,4 @@ class MqttClient:
     def close(self):
         self._client.loop_stop()
         self._client.disconnect()
-        print("Connexion au MQTT fermée.")
+        print("MQTT connection closed.")

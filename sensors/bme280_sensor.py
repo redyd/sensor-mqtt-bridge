@@ -5,7 +5,7 @@ from core.sensors_definitions import HumiditySensor, PressureSensor, Temperature
 
 
 class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
-    """BME280 : température, pression et humidité relative."""
+    """BME280: temperature, pressure, and relative humidity."""
 
     def __init__(self, port=1, address=0x76):
         self._bus = smbus2.SMBus(port)

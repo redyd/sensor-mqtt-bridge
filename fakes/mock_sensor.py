@@ -12,7 +12,7 @@ class MockSensor(
     ParticulateMatterSensor,
     Co2Sensor,
 ):
-    """Capteur factice utilisé quand le matériel réel n'est pas disponible."""
+    """Dummy sensor used for testing"""
 
     def get_temperature(self) -> float:
         return round(random.uniform(18, 28), 1)

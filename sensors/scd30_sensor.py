@@ -4,7 +4,7 @@ from core.sensors_definitions import Co2Sensor
 
 
 class Scd30Sensor(Co2Sensor):
-    """SCD30 : CO2."""
+    """SCD30: CO2."""
 
     def __init__(self):
         self._sensor = SCD30()

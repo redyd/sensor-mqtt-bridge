@@ -40,14 +40,16 @@ FETCH_INTERVAL_SECOND = config["update_interval"]
 try:
     while True:
         data = sensors_exporter.export()
-        print("Données exportées")
+        
+        print("Data exported")
         print(data)
         
-        MQTT_CLIENT.send_data("capteurs/donnees", data)
+        MQTT_CLIENT.send_data("sensors/data", data)
         
-        print("Données envoyées")
-        print("En attente...")
+        print("Data sent")
+        print("Waiting...")
+        
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
-    print("Terminaison du programme...")
+    print("Terminating program...")
     MQTT_CLIENT.close()

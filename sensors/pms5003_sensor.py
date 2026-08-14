@@ -4,7 +4,7 @@ from core.sensors_definitions import ParticulateMatterSensor
 
 
 class Pms5003Sensor(ParticulateMatterSensor):
-    """PMS5003 : particules fines."""
+    """PMS5003: fine particulate matter."""
 
     def __init__(self):
         self._sensor = PMS5003()

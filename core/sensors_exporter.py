@@ -8,7 +8,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.cs
 
 
 class SensorsExporter:
-    """Exporte les données des capteurs et les journalise dans un fichier CSV."""
+    """Export sensor data and log it to a CSV file."""
 
     TEMPERATURE_SENSOR: TemperatureSensor
     PRESSURE_SENSOR: PressureSensor

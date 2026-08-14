@@ -4,7 +4,7 @@ from core.sensors_definitions import LightSensor
 
 
 class Ltr559Sensor(LightSensor):
-    """LTR559 : lumière ambiante."""
+    """LTR559: ambient light."""
 
     def __init__(self):
         self._sensor = LTR559()

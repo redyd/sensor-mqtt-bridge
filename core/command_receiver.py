@@ -2,12 +2,12 @@ from core.sensors_definitions import *
 
 
 class CommandReceiver:
-    """Dispatch des commandes MQTT reçues."""
+    """Dispatch of received MQTT commands."""
 
-    # nombre correspond à la garantie de livraison:
-    # 0 = très rapide mais peu sûr, 1 = rapide et moyennement sûr, 2 = lent mais très sûr
+    # number corresponds to delivery guarantee:
+    # 0 = very fast but unreliable, 1 = fast and moderately reliable, 2 = slow but very reliable
     SUBSCRIPTIONS = [
-        ("commandes/status", 0),
+        ("commands/status", 0),
     ]
     
     TEMPERATURE_SENSOR: TemperatureSensor
@@ -36,9 +36,8 @@ class CommandReceiver:
         self.PARTICULE_MATTER_SENSOR = particulate_matter_sensor
         self.CO2_CENSOR = co2_sensor
         
-        # la clé de chaque dictionnaire est "topic", et ses sous clés sont "command"
         self._handlers = {
-            "commandes/status": {
+            "commands/status": {
                 "get_status": self._handle_get_status,
             },
         }
@@ -59,7 +58,7 @@ class CommandReceiver:
             "particulate_matter": self.PARTICULE_MATTER_SENSOR.get_particulate_matter(),
             "co2": self.CO2_CENSOR.get_co2(),
         }
-        print(f"Statut: {status}")
+        print(f"Status: {status}")
 
     def _handle_unknown(self, payload):
-        print(f"Commande inconnue: {payload}")
+        print(f"Unknown command: {payload}")

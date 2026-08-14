@@ -1,4 +1,4 @@
-"""Utilitaires d'initialisation pour la configuration et les capteurs."""
+"""Initialization utilities for configuration and sensors."""
 
 import json
 import os
@@ -11,7 +11,7 @@ from sensors.scd30_sensor import Scd30Sensor
 
 
 def load_config():
-    """Charge la configuration depuis config.json ou utilise les valeurs par défaut."""
+    """Load configuration from config.json or use default values."""
     config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
     if os.path.exists(config_path):
         with open(config_path) as f:
@@ -31,19 +31,19 @@ def load_config():
 
 
 def init_sensor(sensor_class, fallback, enabled=True):
-    """Initialise un capteur si activé, sinon retourne le fallback."""
+    """Initialize a sensor if enabled, otherwise return the fallback."""
     if not enabled:
-        print(f"{sensor_class.__name__} désactivé dans la configuration.")
+        print(f"{sensor_class.__name__} disabled in configuration.")
         return fallback
     try:
         return sensor_class()
     except BaseException as error:
-        print(f"{sensor_class.__name__} indisponible ({error}), capteur factice utilisé.")
+        print(f"{sensor_class.__name__} unavailable ({error}), mock sensor used.")
         return fallback
 
 
 def init_all_sensors(config):
-    """Initialise tous les capteurs selon la configuration."""
+    """Initialize all sensors according to configuration."""
     enabled = config["enabled_sensors"]
     mock = MockSensor()
     
