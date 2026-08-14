@@ -3,6 +3,7 @@ from core.command_receiver import CommandReceiver
 from core.sensors_exporter import SensorsExporter
 from utils.initializer import load_config, init_all_sensors
 import time
+import json
 
 
 config = load_config()
@@ -41,15 +42,17 @@ try:
     while True:
         data = sensors_exporter.export()
         
-        print("Data exported")
-        print(data)
+        print("\n" + "="*60)
+        print("Sensor Data:")
+        print("="*60)
+        print(json.dumps(data, indent=2))
+        print("="*60 + "\n")
         
         MQTT_CLIENT.send_data("sensors/data", data)
-        
-        print("Data sent")
-        print("Waiting...")
+        print("Data sent to MQTT broker")
+        print(f"Waiting {FETCH_INTERVAL_SECOND} seconds...\n")
         
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
-    print("Terminating program...")
+    print("\n⛔ Terminating program...")
     MQTT_CLIENT.close()
