@@ -62,7 +62,10 @@ log_queue = ["---", "---", "---"]
 
 try:
     while True:
+        # get data
         data = sensors_exporter.export()
+        
+        # display
         clear_screen()
 
         print(BANNER)
@@ -74,10 +77,15 @@ try:
             prefix = "> " if i == len(log_queue) - 1 else "  "
             print(f"{prefix}{log}")
 
+        # send data
         MQTT_CLIENT.send_data("sensors/data", data)
+        
+        # log
         timestamp = time.strftime("%H:%M:%S")
         log_queue.pop(0)
         log_queue.append(f"Data sent at {timestamp}")
+        
+        # sleep
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
     print("\nTerminating program...")
