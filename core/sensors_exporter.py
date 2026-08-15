@@ -8,7 +8,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.cs
 
 
 class SensorsExporter:
-    """Export sensor data and log it to a CSV file."""
+    """Export sensor data to a single CSV file with raw and smoothed values."""
 
     TEMPERATURE_SENSOR: TemperatureSensor
     PRESSURE_SENSOR: PressureSensor
@@ -21,12 +21,19 @@ class SensorsExporter:
     FIELDNAMES = [
         "timestamp",
         "temperature",
+        "temperature_smooth",
         "pressure",
+        "pressure_smooth",
         "humidity",
+        "humidity_smooth",
         "light",
+        "light_smooth",
         "sound_level",
+        "sound_level_smooth",
         "particulate_matter",
+        "particulate_matter_smooth",
         "co2",
+        "co2_smooth",
     ]
 
     def __init__(
@@ -50,12 +57,18 @@ class SensorsExporter:
         self.CO2_CENSOR = co2_sensor
 
         self._path = path
+        directory = os.path.dirname(self._path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
         self._write_every = write_every
         self._export_count = 0
 
     def export(self) -> dict:
-        data = {
-            "timestamp": datetime.datetime.now().isoformat(),
+        now = datetime.datetime.now().isoformat()
+
+        raw_data = {
+            "timestamp": now,
             "temperature": self.TEMPERATURE_SENSOR.get_temperature(),
             "pressure": self.PRESSURE_SENSOR.get_pressure(),
             "humidity": self.HUMIDITY_SENSOR.get_humidity(),
@@ -65,20 +78,51 @@ class SensorsExporter:
             "co2": self.CO2_CENSOR.get_co2(),
         }
 
+        smooth_data = {
+            "timestamp": now,
+            "temperature": self.TEMPERATURE_SENSOR.get_average_temperature(),
+            "pressure": self.PRESSURE_SENSOR.get_average_pressure(),
+            "humidity": self.HUMIDITY_SENSOR.get_average_humidity(),
+            "light": self.LIGHT_SENSOR.get_average_light(),
+            "sound_level": self.MICROPHONE_SENSOR.get_average_sound_level(),
+            "particulate_matter": self.PARTICULE_MATTER_SENSOR.get_average_particulate_matter(),
+            "co2": self.CO2_CENSOR.get_average_co2(),
+        }
+
+        data = {
+            "raw": raw_data,
+            "smooth": smooth_data,
+        }
+
         self._export_count += 1
         if self._export_count % self._write_every == 0:
-            self._write(data)
+            self._write_row(raw_data, smooth_data)
 
         return data
 
-    def _write(self, data: dict):
+    def _write_row(self, raw_data: dict, smooth_data: dict):
         file_exists = os.path.isfile(self._path)
-        directory = os.path.dirname(self._path)
-        if directory:
-            os.makedirs(directory, exist_ok=True)
 
         with open(self._path, "a", newline="") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=self.FIELDNAMES)
             if not file_exists:
                 writer.writeheader()
-            writer.writerow(data)
+
+            row = {
+                "timestamp": raw_data["timestamp"],
+                "temperature": raw_data["temperature"],
+                "temperature_smooth": smooth_data["temperature"],
+                "pressure": raw_data["pressure"],
+                "pressure_smooth": smooth_data["pressure"],
+                "humidity": raw_data["humidity"],
+                "humidity_smooth": smooth_data["humidity"],
+                "light": raw_data["light"],
+                "light_smooth": smooth_data["light"],
+                "sound_level": raw_data["sound_level"],
+                "sound_level_smooth": smooth_data["sound_level"],
+                "particulate_matter": raw_data["particulate_matter"],
+                "particulate_matter_smooth": smooth_data["particulate_matter"],
+                "co2": raw_data["co2"],
+                "co2_smooth": smooth_data["co2"],
+            }
+            writer.writerow(row)
