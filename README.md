@@ -215,3 +215,4 @@ python main.py
 - [ ] Define all MQTT topics and command specifications
 - [ ] Define and implement response handlers for all topics and commands
 - [ ] Integrate with dashboard system (data visualization and control interface)
+- [ ] Two sensors have temperature (BME280 & LMT84) ? 
