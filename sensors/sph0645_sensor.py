@@ -2,6 +2,7 @@ import numpy
 import sounddevice
 
 from core.sensors_definitions import MicrophoneSensor
+from utils.sliding_average import SlidingAverage
 
 
 class Sph0645Sensor(MicrophoneSensor):
@@ -10,6 +11,7 @@ class Sph0645Sensor(MicrophoneSensor):
     def __init__(self, samplerate=48000, duration=0.5):
         self._samplerate = samplerate
         self._duration = duration
+        self._sound_level_average = SlidingAverage()
 
     def get_sound_level(self) -> float:
         recording = sounddevice.rec(
@@ -21,3 +23,6 @@ class Sph0645Sensor(MicrophoneSensor):
         sounddevice.wait()
         rms = numpy.sqrt(numpy.mean(numpy.square(recording)))
         return float(rms)
+
+    def get_average_sound_level(self) -> float:
+        return self._sound_level_average.add(self.get_sound_level())

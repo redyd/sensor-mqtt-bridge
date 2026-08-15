@@ -1,6 +1,7 @@
 from gpiozero import MCP3008
 
 from core.sensors_definitions import TemperatureSensor
+from utils.sliding_average import SlidingAverage
 
 
 class Lmt84Sensor(TemperatureSensor):
@@ -13,7 +14,11 @@ class Lmt84Sensor(TemperatureSensor):
     def __init__(self, channel=0, reference_voltage=3.3):
         self._adc = MCP3008(channel=channel)
         self._reference_voltage = reference_voltage
+        self._temperature_average = SlidingAverage()
 
     def get_temperature(self) -> float:
         voltage_mv = self._adc.value * self._reference_voltage * 1000
         return (voltage_mv - self._OFFSET_MV) / self._SLOPE_MV_PER_C
+
+    def get_average_temperature(self) -> float:
+        return self._temperature_average.add(self.get_temperature())
