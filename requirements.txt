@@ -1,6 +1,7 @@
 paho-mqtt==1.6.1
 bme280==0.7
 smbus2~=0.3.0
+gpiozero==2.0.1
 ltr559==1.0.0
 pms5003==1.0.1
 scd30-i2c==0.0.6
