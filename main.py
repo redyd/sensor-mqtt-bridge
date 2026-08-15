@@ -69,9 +69,23 @@ try:
         clear_screen()
 
         print(BANNER)
-        print(f"RUNNING | interval: {FETCH_INTERVAL_SECOND}s | broker: {config['mqtt_broker']}:{config['mqtt_port']}\n")        
-        for key, value in data.items():
-            print(f"  {key:<20} {value}")
+        print(f"RUNNING | interval: {FETCH_INTERVAL_SECOND}s | broker: {config['mqtt_broker']}:{config['mqtt_port']}\n")
+
+        raw_data = data["raw"]
+        smooth_data = data["smooth"]
+        for key in [
+            "temperature",
+            "pressure",
+            "humidity",
+            "light",
+            "sound_level",
+            "particulate_matter",
+            "co2",
+        ]:
+            raw_value = raw_data.get(key, "-")
+            smooth_value = smooth_data.get(key, "-")
+            print(f"  {key:<18} {raw_value} (~={smooth_value})")
+
         print("\nlog:")
         for i, log in enumerate(log_queue):
             prefix = "> " if i == len(log_queue) - 1 else "  "

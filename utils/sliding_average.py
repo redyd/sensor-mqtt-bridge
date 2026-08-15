@@ -17,7 +17,7 @@ class SlidingAverage:
     def get_average(self):
         if not self._values:
             return 0.0
-        return sum(self._values) / len(self._values)
+        return round(sum(self._values) / len(self._values), 4)
 
     def clear(self):
         self._values.clear()
