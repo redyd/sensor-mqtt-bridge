@@ -29,7 +29,17 @@ class MqttClient:
             print("Invalid MQTT message, ignored.")
 
     def send_data(self, topic, data):
-        self._client.publish(topic, json.dumps(data))
+        if not self._client.is_connected():
+            return False
+
+        message_info = self._client.publish(topic, json.dumps(data))
+
+        try:
+            message_info.wait_for_publish(timeout=2)
+        except (RuntimeError, ValueError):
+            return False
+
+        return message_info.rc == mqtt.MQTT_ERR_SUCCESS
 
     def close(self):
         self._client.loop_stop()

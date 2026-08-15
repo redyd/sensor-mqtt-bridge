@@ -19,12 +19,76 @@ BANNER = r"""
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::..:::::::      
 """
 
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+CYAN = "\033[36m"
+GREEN = "\033[32m"
+RED = "\033[31m"
+
+WIDTH = 58
+SENSOR_KEYS = [
+    "temperature",
+    "pressure",
+    "humidity",
+    "light",
+    "sound_level",
+    "particulate_matter",
+    "co2",
+]
+
 
 def clear_screen():
     if platform.system() == "Windows":
         os.system('cls')
     else:
         os.system('clear')
+
+
+def print_header(interval, broker, port):
+    print(BANNER)
+    print(f"{DIM}interval: {interval}s | broker: {broker}:{port}{RESET}")
+    print(f"{CYAN}{'-' * WIDTH}{RESET}")
+
+
+def print_sensors_table(raw_data, smooth_data):
+    print(f"{BOLD}{'SENSOR':<20}{'RAW':>19}{'SMOOTH':>19}{RESET}")
+    print(f"{CYAN}{'-' * WIDTH}{RESET}")
+
+    for key in SENSOR_KEYS:
+        raw_value = raw_data.get(key, "-")
+        smooth_value = smooth_data.get(key, "-")
+
+        if isinstance(raw_value, dict) or isinstance(smooth_value, dict):
+            print(f"{key:<20}")
+            sub_keys = raw_value.keys() if isinstance(raw_value, dict) else smooth_value.keys()
+            for sub_key in sub_keys:
+                sub_raw = raw_value.get(sub_key, "-") if isinstance(raw_value, dict) else "-"
+                sub_smooth = smooth_value.get(sub_key, "-") if isinstance(smooth_value, dict) else "-"
+                print(f"  {sub_key:<18}{str(sub_raw):>19}{str(sub_smooth):>19}")
+        else:
+            print(f"{key:<20}{str(raw_value):>19}{str(smooth_value):>19}")
+
+    print(f"{CYAN}{'-' * WIDTH}{RESET}")
+
+
+def print_send_status(send_ok):
+    status_color = GREEN if send_ok else RED
+    print(f"MQTT send: {status_color}{'OK' if send_ok else 'FAIL'}{RESET}")
+
+
+def print_log(log_queue):
+    print(f"\n{BOLD}LOG{RESET}")
+    print(f"{CYAN}{'-' * WIDTH}{RESET}")
+    for i, log in enumerate(log_queue):
+        prefix = ">" if i == len(log_queue) - 1 else " "
+        print(f" {prefix} {log}")
+
+
+def send_sensor_data(mqtt_client, raw_data, smooth_data):
+    result1 = mqtt_client.send_data("sensors/raw_data", raw_data)
+    result2 = mqtt_client.send_data("sensors/smooth_data", smooth_data)
+    return result1 and result2
 
 
 config = load_config()
@@ -62,45 +126,23 @@ log_queue = ["---", "---", "---"]
 
 try:
     while True:
-        # get data
         data = sensors_exporter.export()
-        
-        # display
-        clear_screen()
-
-        print(BANNER)
-        print(f"RUNNING | interval: {FETCH_INTERVAL_SECOND}s | broker: {config['mqtt_broker']}:{config['mqtt_port']}\n")
-
         raw_data = data["raw"]
         smooth_data = data["smooth"]
-        for key in [
-            "temperature",
-            "pressure",
-            "humidity",
-            "light",
-            "sound_level",
-            "particulate_matter",
-            "co2",
-        ]:
-            raw_value = raw_data.get(key, "-")
-            smooth_value = smooth_data.get(key, "-")
-            print(f"  {key:<18} {raw_value} (~={smooth_value})")
 
-        print("\nlog:")
-        for i, log in enumerate(log_queue):
-            prefix = "> " if i == len(log_queue) - 1 else "  "
-            print(f"{prefix}{log}")
+        clear_screen()
+        print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"])
+        print_sensors_table(raw_data, smooth_data)
 
-        # send data
-        MQTT_CLIENT.send_data("sensors/raw_data", raw_data)
-        MQTT_CLIENT.send_data("sensors/smooth_data", smooth_data)
-        
-        # log
+        send_ok = send_sensor_data(MQTT_CLIENT, raw_data, smooth_data)
+        print_send_status(send_ok)
+
         timestamp = time.strftime("%H:%M:%S")
         log_queue.pop(0)
-        log_queue.append(f"Data sent at {timestamp}")
-        
-        # sleep
+        log_queue.append(f"Data sent at {timestamp}" if send_ok else f"Send failed at {timestamp}")
+
+        print_log(log_queue)
+
         time.sleep(FETCH_INTERVAL_SECOND)
 except KeyboardInterrupt:
     print("\nTerminating program...")

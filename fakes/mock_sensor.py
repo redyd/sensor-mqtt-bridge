@@ -48,8 +48,13 @@ class MockSensor(
         raw = round(random.uniform(30, 80), 1)
         return raw, self._sound_level_average.add(raw)
 
+
     def get_particulate_matter(self) -> tuple[dict, dict]:
-        raw = {"pm1_0": 5, "pm2_5": 8, "pm10": 12}
+        pm1_0 = round(random.uniform(1, 15), 1)
+        pm2_5 = round(random.uniform(pm1_0, max(pm1_0 * 1.5, 20)), 1)
+        pm10 = round(random.uniform(pm2_5, max(pm2_5 * 1.3, 50)), 1)
+        
+        raw = {"pm1_0": pm1_0, "pm2_5": pm2_5, "pm10": pm10}
         smooth = {
             key: self._particulate_average[key].add(value)
             for key, value in raw.items()
