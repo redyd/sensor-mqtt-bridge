@@ -92,7 +92,8 @@ try:
             print(f"{prefix}{log}")
 
         # send data
-        MQTT_CLIENT.send_data("sensors/data", data)
+        MQTT_CLIENT.send_data("sensors/raw_data", raw_data)
+        MQTT_CLIENT.send_data("sensors/smooth_data", smooth_data)
         
         # log
         timestamp = time.strftime("%H:%M:%S")

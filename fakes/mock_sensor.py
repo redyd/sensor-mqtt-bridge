@@ -28,48 +28,34 @@ class MockSensor(
         }
         self._co2_average = SlidingAverage()
 
-    def get_temperature(self) -> float:
-        return round(random.uniform(18, 28), 1)
+    def get_temperature(self) -> tuple[float, float]:
+        raw = round(random.uniform(18, 28), 1)
+        return raw, self._temperature_average.add(raw)
 
-    def get_average_temperature(self) -> float:
-        return self._temperature_average.add(self.get_temperature())
+    def get_pressure(self) -> tuple[float, float]:
+        raw = round(random.uniform(990, 1025), 1)
+        return raw, self._pressure_average.add(raw)
 
-    def get_pressure(self) -> float:
-        return round(random.uniform(990, 1025), 1)
+    def get_humidity(self) -> tuple[float, float]:
+        raw = round(random.uniform(30, 70), 1)
+        return raw, self._humidity_average.add(raw)
 
-    def get_average_pressure(self) -> float:
-        return self._pressure_average.add(self.get_pressure())
+    def get_light(self) -> tuple[float, float]:
+        raw = round(random.uniform(0, 1000), 1)
+        return raw, self._light_average.add(raw)
 
-    def get_humidity(self) -> float:
-        return round(random.uniform(30, 70), 1)
+    def get_sound_level(self) -> tuple[float, float]:
+        raw = round(random.uniform(30, 80), 1)
+        return raw, self._sound_level_average.add(raw)
 
-    def get_average_humidity(self) -> float:
-        return self._humidity_average.add(self.get_humidity())
-
-    def get_light(self) -> float:
-        return round(random.uniform(0, 1000), 1)
-
-    def get_average_light(self) -> float:
-        return self._light_average.add(self.get_light())
-
-    def get_sound_level(self) -> float:
-        return round(random.uniform(30, 80), 1)
-
-    def get_average_sound_level(self) -> float:
-        return self._sound_level_average.add(self.get_sound_level())
-
-    def get_particulate_matter(self) -> dict:
-        return {"pm1_0": 5, "pm2_5": 8, "pm10": 12}
-
-    def get_average_particulate_matter(self) -> dict:
-        current = self.get_particulate_matter()
-        return {
+    def get_particulate_matter(self) -> tuple[dict, dict]:
+        raw = {"pm1_0": 5, "pm2_5": 8, "pm10": 12}
+        smooth = {
             key: self._particulate_average[key].add(value)
-            for key, value in current.items()
+            for key, value in raw.items()
         }
+        return raw, smooth
 
-    def get_co2(self) -> float:
-        return round(random.uniform(400, 800), 1)
-
-    def get_average_co2(self) -> float:
-        return self._co2_average.add(self.get_co2())
+    def get_co2(self) -> tuple[float, float]:
+        raw = round(random.uniform(400, 800), 1)
+        return raw, self._co2_average.add(raw)

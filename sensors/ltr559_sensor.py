@@ -11,9 +11,7 @@ class Ltr559Sensor(LightSensor):
         self._sensor = LTR559()
         self._light_average = SlidingAverage()
 
-    def get_light(self) -> float:
+    def get_light(self) -> tuple[float, float]:
         self._sensor.update_sensor()
-        return self._sensor.get_lux()
-
-    def get_average_light(self) -> float:
-        return self._light_average.add(self.get_light())
+        raw = self._sensor.get_lux()
+        return raw, self._light_average.add(raw)

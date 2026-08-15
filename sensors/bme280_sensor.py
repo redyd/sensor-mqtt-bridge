@@ -19,20 +19,14 @@ class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
     def _read(self):
         return bme280.sample(self._bus, self._address, self._calibration_params)
 
-    def get_temperature(self) -> float:
-        return self._read().temperature
+    def get_temperature(self) -> tuple[float, float]:
+        raw = self._read().temperature
+        return raw, self._temperature_average.add(raw)
 
-    def get_average_temperature(self) -> float:
-        return self._temperature_average.add(self.get_temperature())
+    def get_pressure(self) -> tuple[float, float]:
+        raw = self._read().pressure
+        return raw, self._pressure_average.add(raw)
 
-    def get_pressure(self) -> float:
-        return self._read().pressure
-
-    def get_average_pressure(self) -> float:
-        return self._pressure_average.add(self.get_pressure())
-
-    def get_humidity(self) -> float:
-        return self._read().humidity
-
-    def get_average_humidity(self) -> float:
-        return self._humidity_average.add(self.get_humidity())
+    def get_humidity(self) -> tuple[float, float]:
+        raw = self._read().humidity
+        return raw, self._humidity_average.add(raw)

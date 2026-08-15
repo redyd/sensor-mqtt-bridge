@@ -16,9 +16,7 @@ class Lmt84Sensor(TemperatureSensor):
         self._reference_voltage = reference_voltage
         self._temperature_average = SlidingAverage()
 
-    def get_temperature(self) -> float:
-        voltage_mv = self._adc.value * self._reference_voltage * 1000
-        return (voltage_mv - self._OFFSET_MV) / self._SLOPE_MV_PER_C
-
-    def get_average_temperature(self) -> float:
-        return self._temperature_average.add(self.get_temperature())
+    def get_temperature(self) -> tuple[float, float]:
+        raw = self._adc.value * self._reference_voltage * 1000
+        raw_temperature = (raw - self._OFFSET_MV) / self._SLOPE_MV_PER_C
+        return raw_temperature, self._temperature_average.add(raw_temperature)

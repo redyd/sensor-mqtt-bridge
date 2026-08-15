@@ -67,26 +67,34 @@ class SensorsExporter:
     def export(self) -> dict:
         now = datetime.datetime.now().isoformat()
 
+        temperature_raw, temperature_smooth = self.TEMPERATURE_SENSOR.get_temperature()
+        pressure_raw, pressure_smooth = self.PRESSURE_SENSOR.get_pressure()
+        humidity_raw, humidity_smooth = self.HUMIDITY_SENSOR.get_humidity()
+        light_raw, light_smooth = self.LIGHT_SENSOR.get_light()
+        sound_raw, sound_smooth = self.MICROPHONE_SENSOR.get_sound_level()
+        particulate_raw, particulate_smooth = self.PARTICULE_MATTER_SENSOR.get_particulate_matter()
+        co2_raw, co2_smooth = self.CO2_CENSOR.get_co2()
+
         raw_data = {
             "timestamp": now,
-            "temperature": self.TEMPERATURE_SENSOR.get_temperature(),
-            "pressure": self.PRESSURE_SENSOR.get_pressure(),
-            "humidity": self.HUMIDITY_SENSOR.get_humidity(),
-            "light": self.LIGHT_SENSOR.get_light(),
-            "sound_level": self.MICROPHONE_SENSOR.get_sound_level(),
-            "particulate_matter": self.PARTICULE_MATTER_SENSOR.get_particulate_matter(),
-            "co2": self.CO2_CENSOR.get_co2(),
+            "temperature": temperature_raw,
+            "pressure": pressure_raw,
+            "humidity": humidity_raw,
+            "light": light_raw,
+            "sound_level": sound_raw,
+            "particulate_matter": particulate_raw,
+            "co2": co2_raw,
         }
 
         smooth_data = {
             "timestamp": now,
-            "temperature": self.TEMPERATURE_SENSOR.get_average_temperature(),
-            "pressure": self.PRESSURE_SENSOR.get_average_pressure(),
-            "humidity": self.HUMIDITY_SENSOR.get_average_humidity(),
-            "light": self.LIGHT_SENSOR.get_average_light(),
-            "sound_level": self.MICROPHONE_SENSOR.get_average_sound_level(),
-            "particulate_matter": self.PARTICULE_MATTER_SENSOR.get_average_particulate_matter(),
-            "co2": self.CO2_CENSOR.get_average_co2(),
+            "temperature": temperature_smooth,
+            "pressure": pressure_smooth,
+            "humidity": humidity_smooth,
+            "light": light_smooth,
+            "sound_level": sound_smooth,
+            "particulate_matter": particulate_smooth,
+            "co2": co2_smooth,
         }
 
         data = {
