@@ -15,5 +15,10 @@ class Scd30Sensor(Co2Sensor):
     def get_co2(self) -> tuple[float, float]:
         while not self._sensor.get_data_ready():
             pass
-        raw = self._sensor.read_measurement()[0]
+
+        measurement = self._sensor.read_measurement()
+        if measurement is None:
+            raise RuntimeError("SCD30 measurement could not be read")
+
+        raw = measurement[0]
         return raw, self._co2_average.add(raw)
