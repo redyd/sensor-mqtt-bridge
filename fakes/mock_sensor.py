@@ -5,7 +5,8 @@ from utils.sliding_average import SlidingAverage
 
 
 class MockSensor(
-    TemperatureSensor,
+    TensionTemperatureSensor,
+    RelativeTemperatureSensor,
     PressureSensor,
     HumiditySensor,
     LightSensor,
@@ -28,7 +29,11 @@ class MockSensor(
         }
         self._co2_average = SlidingAverage()
 
-    def get_temperature(self) -> tuple[float, float]:
+    def get_tension_temperature(self) -> tuple[float, float]:
+        raw = round(random.uniform(18, 28), 1)
+        return raw, self._temperature_average.add(raw)
+    
+    def get_relative_temperature(self) -> tuple[float, float]:
         raw = round(random.uniform(18, 28), 1)
         return raw, self._temperature_average.add(raw)
 

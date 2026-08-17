@@ -4,7 +4,8 @@
     "ltr559": false,
     "sph0645": false,
     "pms5003": false,
-    "scd30": false
+    "scd30": false,
+    "lmt84": false
   },
   "mqtt_broker": "192.168.1.46",
   "mqtt_port": 1883,

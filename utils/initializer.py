@@ -9,6 +9,7 @@ from sensors.ltr559_sensor import Ltr559Sensor
 from sensors.sph0645_sensor import Sph0645Sensor
 from sensors.pms5003_sensor import Pms5003Sensor
 from sensors.scd30_sensor import Scd30Sensor
+from sensors.lmt84_sensor import Lmt84Sensor
 
 
 def load_config():
@@ -24,6 +25,7 @@ def load_config():
             "sph0645": True,
             "pms5003": True,
             "scd30": True,
+            "lmt84": True
         },
         "mqtt_broker": "192.168.1.46",
         "mqtt_port": 1883,
@@ -60,6 +62,7 @@ def init_all_sensors(config):
         "sph0645": init_sensor(Sph0645Sensor, enabled["sph0645"]),
         "pms5003": init_sensor(Pms5003Sensor, enabled["pms5003"]),
         "scd30": init_sensor(Scd30Sensor, enabled["scd30"]),
+        "lmt84": init_sensor(Lmt84Sensor, enabled["lmt84"])
     }
     
     print("\n=== All sensors initialized ===\n")

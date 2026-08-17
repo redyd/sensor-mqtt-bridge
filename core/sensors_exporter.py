@@ -10,7 +10,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.cs
 class SensorsExporter:
     """Export sensor data to a single CSV file with raw and smoothed values."""
 
-    TEMPERATURE_SENSOR: TemperatureSensor
+    TENSION_TEMPERATURE_SENSOR: TensionTemperatureSensor
     PRESSURE_SENSOR: PressureSensor
     HUMIDITY_SENSOR: HumiditySensor
     LIGHT_SENSOR: LightSensor
@@ -20,8 +20,10 @@ class SensorsExporter:
 
     CSV_FIELDNAMES = [
         "timestamp",
-        "temperature",
-        "temperature_smooth",
+        "relative_temperature",
+        "relative_temperature_smooth",
+        "tension_temperature",
+        "tension_temperature_smooth",
         "pressure",
         "pressure_smooth",
         "humidity",
@@ -38,7 +40,8 @@ class SensorsExporter:
 
     def __init__(
         self,
-        temperature_sensor: TemperatureSensor,
+        tension_temperature_sensor: TensionTemperatureSensor,
+        relative_temperature_sensor: RelativeTemperatureSensor,
         pressure_sensor: PressureSensor,
         humidity_sensor: HumiditySensor,
         light_sensor: LightSensor,
@@ -48,7 +51,8 @@ class SensorsExporter:
         path: str = DEFAULT_PATH,
         write_every: int = 1,
     ):
-        self.TEMPERATURE_SENSOR = temperature_sensor
+        self.TENSION_TEMPERATURE_SENSOR = tension_temperature_sensor
+        self.RELATIVE_TEMPERATURE_SENSOR = relative_temperature_sensor
         self.PRESSURE_SENSOR = pressure_sensor
         self.HUMIDITY_SENSOR = humidity_sensor
         self.LIGHT_SENSOR = light_sensor
@@ -67,7 +71,8 @@ class SensorsExporter:
     def export(self) -> dict:
         now = datetime.datetime.now().isoformat()
 
-        temperature_raw, temperature_smooth = self.TEMPERATURE_SENSOR.get_temperature()
+        tension_temperature_raw, tension_temperature_smooth = self.TENSION_TEMPERATURE_SENSOR.get_tension_temperature()
+        relative_temperature_raw, relative_temperature_smooth = self.RELATIVE_TEMPERATURE_SENSOR.get_relative_temperature()
         pressure_raw, pressure_smooth = self.PRESSURE_SENSOR.get_pressure()
         humidity_raw, humidity_smooth = self.HUMIDITY_SENSOR.get_humidity()
         light_raw, light_smooth = self.LIGHT_SENSOR.get_light()
@@ -77,7 +82,8 @@ class SensorsExporter:
 
         raw_data = {
             "timestamp": now,
-            "temperature": temperature_raw,
+            "relative_temperature": relative_temperature_raw,
+            "tension_temperature": tension_temperature_raw,
             "pressure": pressure_raw,
             "humidity": humidity_raw,
             "light": light_raw,
@@ -88,7 +94,8 @@ class SensorsExporter:
 
         smooth_data = {
             "timestamp": now,
-            "temperature": temperature_smooth,
+            "tension_temperature": tension_temperature_smooth,
+            "relative_temperature": relative_temperature_smooth,
             "pressure": pressure_smooth,
             "humidity": humidity_smooth,
             "light": light_smooth,
@@ -108,6 +115,22 @@ class SensorsExporter:
 
         return data
 
+    def _build_row(self, raw_data: dict, smooth_data: dict) -> dict:
+        row = {"timestamp": raw_data["timestamp"]}
+        for key in (
+            "relative_temperature",
+            "tension_temperature",
+            "pressure",
+            "humidity",
+            "light",
+            "sound_level",
+            "particulate_matter",
+            "co2",
+        ):
+            row[f"{key}"] = raw_data[key]
+            row[f"{key}_smooth"] = smooth_data[key]
+        return row
+
     def _write_row(self, raw_data: dict, smooth_data: dict):
         file_exists = os.path.isfile(self._path)
 
@@ -116,21 +139,5 @@ class SensorsExporter:
             if not file_exists:
                 writer.writeheader()
 
-            row = {
-                "timestamp": raw_data["timestamp"],
-                "temperature": raw_data["temperature"],
-                "temperature_smooth": smooth_data["temperature"],
-                "pressure": raw_data["pressure"],
-                "pressure_smooth": smooth_data["pressure"],
-                "humidity": raw_data["humidity"],
-                "humidity_smooth": smooth_data["humidity"],
-                "light": raw_data["light"],
-                "light_smooth": smooth_data["light"],
-                "sound_level": raw_data["sound_level"],
-                "sound_level_smooth": smooth_data["sound_level"],
-                "particulate_matter": raw_data["particulate_matter"],
-                "particulate_matter_smooth": smooth_data["particulate_matter"],
-                "co2": raw_data["co2"],
-                "co2_smooth": smooth_data["co2"],
-            }
-            writer.writerow(row)
+            row = self._build_row(raw_data, smooth_data)
+            writer.writerow({fieldname: row.get(fieldname) for fieldname in self.CSV_FIELDNAMES})

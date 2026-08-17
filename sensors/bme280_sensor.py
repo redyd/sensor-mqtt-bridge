@@ -1,11 +1,11 @@
 import bme280
 import smbus2
 
-from core.sensors_definitions import HumiditySensor, PressureSensor, TemperatureSensor
+from core.sensors_definitions import HumiditySensor, PressureSensor, RelativeTemperatureSensor
 from utils.sliding_average import SlidingAverage
 
 
-class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
+class Bme280Sensor(RelativeTemperatureSensor, PressureSensor, HumiditySensor):
     """BME280: temperature, pressure, and relative humidity."""
 
     def __init__(self, port=1, address=0x76):
@@ -19,7 +19,7 @@ class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
     def _read(self):
         return bme280.sample(self._bus, self._address, self._calibration_params)
 
-    def get_temperature(self) -> tuple[float, float]:
+    def get_relative_temperature(self) -> tuple[float, float]:
         raw = self._read().temperature
         return raw, self._temperature_average.add(raw)
 

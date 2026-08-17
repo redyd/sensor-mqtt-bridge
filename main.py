@@ -96,6 +96,7 @@ light_sensor = sensors["ltr559"]
 microphone_sensor = sensors["sph0645"]
 particulate_matter_sensor = sensors["pms5003"]
 co2_sensor = sensors["scd30"]
+lmt84 = sensors["lmt84"]
 
 command_receiver = CommandReceiver(
     temperature_sensor=bme280_sensor,
@@ -108,7 +109,8 @@ command_receiver = CommandReceiver(
 )
 
 sensors_exporter = SensorsExporter(
-    temperature_sensor=bme280_sensor,
+    tension_temperature_sensor=lmt84,
+    relative_temperature_sensor=bme280_sensor,
     pressure_sensor=bme280_sensor,
     humidity_sensor=bme280_sensor,
     light_sensor=light_sensor,

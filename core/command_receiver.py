@@ -10,7 +10,7 @@ class CommandReceiver:
         ("commands/status", 0),
     ]
     
-    TEMPERATURE_SENSOR: TemperatureSensor
+    TEMPERATURE_SENSOR: TensionTemperatureSensor
     PRESSURE_SENSOR: PressureSensor
     HUMIDITY_SENSOR: HumiditySensor
     LIGHT_SENSOR: LightSensor
@@ -20,7 +20,7 @@ class CommandReceiver:
 
     def __init__(
         self,
-        temperature_sensor: TemperatureSensor,
+        temperature_sensor: TensionTemperatureSensor,
         pressure_sensor: PressureSensor,
         humidity_sensor: HumiditySensor,
         light_sensor: LightSensor,
@@ -50,7 +50,7 @@ class CommandReceiver:
 
     def _handle_get_status(self, payload):
         status = {
-            "temperature": self.TEMPERATURE_SENSOR.get_temperature(),
+            "temperature": self.TEMPERATURE_SENSOR.get_tension_temperature(),
             "pressure": self.PRESSURE_SENSOR.get_pressure(),
             "humidity": self.HUMIDITY_SENSOR.get_humidity(),
             "light": self.LIGHT_SENSOR.get_light(),

@@ -212,7 +212,7 @@ python main.py
 ## TODO
 
 - [ ] Vérifier la conformité des types et formats de données avec le cahier des charges
-- [ ] Définir tous les topics MQTT et commandes
+- [ ] Définir tous les topics MQTT et commandes: fréquences, bouton pause, bouton reset
 - [ ] Définir et implémenter le gestionnaire de réponses pour tous les topics et commandes
 - [ ] Intégrer au système de dashboard (interface de visualisation et de contrôle des données)
 - [ ] Deux capteurs mesure la température (BME280 & LMT84) ?: utiliser les deux
