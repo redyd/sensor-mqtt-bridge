@@ -18,7 +18,7 @@ class SensorsExporter:
     PARTICULE_MATTER_SENSOR: ParticulateMatterSensor
     CO2_CENSOR: Co2Sensor
 
-    FIELDNAMES = [
+    CSV_FIELDNAMES = [
         "timestamp",
         "temperature",
         "temperature_smooth",
@@ -112,7 +112,7 @@ class SensorsExporter:
         file_exists = os.path.isfile(self._path)
 
         with open(self._path, "a", newline="") as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=self.FIELDNAMES)
+            writer = csv.DictWriter(csv_file, fieldnames=self.CSV_FIELDNAMES)
             if not file_exists:
                 writer.writeheader()
 

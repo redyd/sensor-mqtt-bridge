@@ -211,8 +211,8 @@ python main.py
 
 ## TODO
 
-- [ ] Verify data type and format compliance with requirements specification
-- [ ] Define all MQTT topics and command specifications
-- [ ] Define and implement response handlers for all topics and commands
-- [ ] Integrate with dashboard system (data visualization and control interface)
-- [ ] Two sensors have temperature (BME280 & LMT84) ? 
+- [ ] Vérifier la conformité des types et formats de données avec le cahier des charges
+- [ ] Définir tous les topics MQTT et commandes
+- [ ] Définir et implémenter le gestionnaire de réponses pour tous les topics et commandes
+- [ ] Intégrer au système de dashboard (interface de visualisation et de contrôle des données)
+- [ ] Deux capteurs mesure la température (BME280 & LMT84) ?
