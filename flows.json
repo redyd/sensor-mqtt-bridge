@@ -1,0 +1,1144 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Sensor Bridge",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "40f8afe3b7013335",
+        "type": "switch",
+        "z": "f6f2187d.f17ca8",
+        "name": "Splitter",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "temperature",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "smooth_pressure",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "humidity",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "light",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "sound_level",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "co2",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "particulate_matter",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 7,
+        "x": 900,
+        "y": 680,
+        "wires": [
+            [
+                "fc23ff849b7ee567"
+            ],
+            [
+                "3d63613b7b1e227f"
+            ],
+            [
+                "e6ce4f0e44796ad4"
+            ],
+            [
+                "cf5ef0e267c9a681"
+            ],
+            [
+                "83f72d92b7f5241e"
+            ],
+            [
+                "f1cc69af25ccfcdf"
+            ],
+            [
+                "cb1ad9859d7211e6"
+            ]
+        ]
+    },
+    {
+        "id": "a6a60a59c7404fe3",
+        "type": "mqtt in",
+        "z": "f6f2187d.f17ca8",
+        "name": "Data",
+        "topic": "sensors/data",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "610404fa11e6208f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 310,
+        "y": 480,
+        "wires": [
+            [
+                "3c7e37899ebfc544"
+            ]
+        ]
+    },
+    {
+        "id": "3c7e37899ebfc544",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Parser",
+        "func": "const data = msg.payload;\nconst values = data.values;\n\nconst messages = [];\n\nfor (const [sensor, v] of Object.entries(values)) {\n    messages.push({ topic: `raw_${sensor}`, sensor, payload: v.raw });\n    messages.push({ topic: `smooth_${sensor}`, sensor, payload: v.smooth });\n    if (v.score !== undefined) {\n        messages.push({ topic: `score_${sensor}`, sensor, payload: v.score });\n    }\n}\n\nmessages.push({ topic: \"score\", sensor: \"global\", payload: data.score });\n\nreturn [messages];",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 480,
+        "wires": [
+            [
+                "adcd228a1217a89b"
+            ]
+        ]
+    },
+    {
+        "id": "07e2f10de8b81d6b",
+        "type": "ui-slider",
+        "z": "f6f2187d.f17ca8",
+        "group": "0ce9d273c4a1de59",
+        "name": "Interval",
+        "label": "Interval of fetch",
+        "tooltip": "",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "outs": "all",
+        "topic": "interval",
+        "topicType": "msg",
+        "thumbLabel": "true",
+        "showTicks": "always",
+        "min": "1",
+        "max": 10,
+        "step": 1,
+        "className": "",
+        "iconPrepend": "",
+        "iconAppend": "",
+        "color": "",
+        "colorTrack": "",
+        "colorThumb": "",
+        "showTextField": false,
+        "x": 380,
+        "y": 100,
+        "wires": [
+            [
+                "19eef5d3d4b95a12"
+            ]
+        ]
+    },
+    {
+        "id": "7e771765977debd6",
+        "type": "mqtt out",
+        "z": "f6f2187d.f17ca8",
+        "name": "Interval",
+        "topic": "commands/interval",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "610404fa11e6208f",
+        "x": 800,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "19eef5d3d4b95a12",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Interval parser",
+        "func": "msg.payload = {\n  command: \"set_interval\",\n  interval: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 100,
+        "wires": [
+            [
+                "7e771765977debd6"
+            ]
+        ]
+    },
+    {
+        "id": "fc23ff849b7ee567",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "06d9ac7909d4b813",
+        "name": "Temperature",
+        "label": "Live Relative Temperature",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1190,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e6ce4f0e44796ad4",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "97cd7045993f2f1e",
+        "name": "Humidity",
+        "label": "Live humidity",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1180,
+        "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3d63613b7b1e227f",
+        "type": "ui-gauge",
+        "z": "f6f2187d.f17ca8",
+        "name": "Pression",
+        "group": "4e76d0f0bc5247ee",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Live Pression",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "units",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "1100",
+                "color": "#ffc800",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "1250",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "1300",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 1180,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a72e2457cf4d6e00",
+        "type": "ui-switch",
+        "z": "f6f2187d.f17ca8",
+        "name": "Pause toggle",
+        "label": "Paused",
+        "group": "0ce9d273c4a1de59",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": false,
+        "topic": "toggle",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-spread",
+        "clickableArea": "switch",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 390,
+        "y": 160,
+        "wires": [
+            [
+                "2f87f02beb4ba0af"
+            ]
+        ]
+    },
+    {
+        "id": "bd4931f16488e0c9",
+        "type": "mqtt out",
+        "z": "f6f2187d.f17ca8",
+        "name": "Toggle pause",
+        "topic": "commands/pause",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "610404fa11e6208f",
+        "x": 810,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "2f87f02beb4ba0af",
+        "type": "function",
+        "z": "f6f2187d.f17ca8",
+        "name": "Toggle parser",
+        "func": "msg.payload = {\n  command: \"toggle\",\n  toggle: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 160,
+        "wires": [
+            [
+                "bd4931f16488e0c9"
+            ]
+        ]
+    },
+    {
+        "id": "cf5ef0e267c9a681",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "a2357737310d8547",
+        "name": "Light",
+        "label": "Live Light",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1170,
+        "y": 720,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "83f72d92b7f5241e",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "c156a8aa207fa3f6",
+        "name": "Sound",
+        "label": "Live Sound",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1170,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f1cc69af25ccfcdf",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "12be3deb18432962",
+        "name": "co2",
+        "label": "Live CO2",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1170,
+        "y": 840,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "adcd228a1217a89b",
+        "type": "switch",
+        "z": "f6f2187d.f17ca8",
+        "name": "Score splitter",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "score",
+                "vt": "str"
+            },
+            {
+                "t": "nempty"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 670,
+        "y": 480,
+        "wires": [
+            [
+                "e88ef8a982d556ad"
+            ],
+            [
+                "40f8afe3b7013335"
+            ]
+        ]
+    },
+    {
+        "id": "e88ef8a982d556ad",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "0278281b01b7bdbb",
+        "name": "Score Global",
+        "label": "Score",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1190,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9b6da7a02be7477c",
+        "type": "ui-button",
+        "z": "f6f2187d.f17ca8",
+        "group": "0ce9d273c4a1de59",
+        "name": "on/off",
+        "label": "effacer l'historique ",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "[]",
+        "payloadType": "json",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 810,
+        "y": 920,
+        "wires": [
+            [
+                "fc23ff849b7ee567",
+                "3d63613b7b1e227f",
+                "e6ce4f0e44796ad4",
+                "cf5ef0e267c9a681",
+                "83f72d92b7f5241e",
+                "f1cc69af25ccfcdf",
+                "cb1ad9859d7211e6"
+            ]
+        ]
+    },
+    {
+        "id": "cb1ad9859d7211e6",
+        "type": "ui-chart",
+        "z": "f6f2187d.f17ca8",
+        "group": "e94793d4d5475bfd",
+        "name": "Particulate Matter",
+        "label": "Live Particulate Matter",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": "",
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "",
+        "ymax": "",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 4,
+        "showLegend": true,
+        "removeOlder": 1,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095ff",
+            "#ff0000",
+            "#ff7f0e",
+            "#2ca02c",
+            "#a347e1",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 6,
+        "height": 8,
+        "className": "",
+        "interpolation": "linear",
+        "x": 1210,
+        "y": 900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "610404fa11e6208f",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "mosquitto",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "0ce9d273c4a1de59",
+        "type": "ui-group",
+        "name": "Global Settings",
+        "page": "713dfa1e6d1c06e7",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "06d9ac7909d4b813",
+        "type": "ui-group",
+        "name": "Temperature",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 7,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "97cd7045993f2f1e",
+        "type": "ui-group",
+        "name": "Humidity",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "4e76d0f0bc5247ee",
+        "type": "ui-group",
+        "name": "Pression",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "a2357737310d8547",
+        "type": "ui-group",
+        "name": "Light",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 6,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "c156a8aa207fa3f6",
+        "type": "ui-group",
+        "name": "Sound",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 5,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "12be3deb18432962",
+        "type": "ui-group",
+        "name": "CO₂",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "0278281b01b7bdbb",
+        "type": "ui-group",
+        "name": "Global",
+        "page": "f2af568e0be27560",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "e94793d4d5475bfd",
+        "type": "ui-group",
+        "name": "Particulate Matter",
+        "page": "23f43286279d9e77",
+        "width": 6,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "713dfa1e6d1c06e7",
+        "type": "ui-page",
+        "name": "Settings",
+        "ui": "80a4a55fa0cee2dd",
+        "path": "/settings",
+        "icon": "mdi-cog",
+        "layout": "grid",
+        "theme": "7eac5508fa1726b0",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 3,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "23f43286279d9e77",
+        "type": "ui-page",
+        "name": "Home",
+        "ui": "80a4a55fa0cee2dd",
+        "path": "/",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "7eac5508fa1726b0",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "f2af568e0be27560",
+        "type": "ui-page",
+        "name": "Score",
+        "ui": "80a4a55fa0cee2dd",
+        "path": "/score",
+        "icon": "star",
+        "layout": "grid",
+        "theme": "7eac5508fa1726b0",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 2,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "80a4a55fa0cee2dd",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "7eac5508fa1726b0",
+        "type": "ui-theme",
+        "name": "Default Theme",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094CE",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "4ad94cd3cd70045d",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@flowfuse/node-red-dashboard": "1.30.2"
+        }
+    }
+]
