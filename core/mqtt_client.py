@@ -25,8 +25,11 @@ class MqttClient:
         try:
             payload = json.loads(msg.payload.decode())
             self._command_receiver.handle(msg.topic, payload)
+            print(f"received {msg}")
         except json.JSONDecodeError:
             print("Invalid MQTT message, ignored.")
+        except (TypeError, ValueError):
+            print(f"Invalid MQTT payload for topic {msg.topic}, ignored.")
 
     def send_data(self, topic, data):
         if not self._client.is_connected():

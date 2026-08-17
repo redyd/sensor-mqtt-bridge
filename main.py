@@ -89,6 +89,12 @@ def send_sensor_data(mqtt_client, raw_data, smooth_data):
     return result1 and result2
 
 
+def update_fetch_interval(new_interval):
+    global FETCH_INTERVAL_SECOND
+    FETCH_INTERVAL_SECOND = new_interval
+    return FETCH_INTERVAL_SECOND
+
+
 config = load_config()
 sensors = init_all_sensors(config)
 
@@ -98,17 +104,6 @@ microphone_sensor = sensors["sph0645"]
 particulate_matter_sensor = sensors["pms5003"]
 co2_sensor = sensors["scd30"]
 lmt84 = sensors["lmt84"]
-
-command_receiver = CommandReceiver(
-    tension_temperature_sensor=lmt84,
-    relative_temperature_sensor=bme280_sensor,
-    pressure_sensor=bme280_sensor,
-    humidity_sensor=bme280_sensor,
-    light_sensor=light_sensor,
-    microphone_sensor=microphone_sensor,
-    particulate_matter_sensor=particulate_matter_sensor,
-    co2_sensor=co2_sensor,
-)
 
 sensors_exporter = SensorsExporter(
     tension_temperature_sensor=lmt84,
@@ -121,8 +116,21 @@ sensors_exporter = SensorsExporter(
     co2_sensor=co2_sensor,
 )
 
-MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
 FETCH_INTERVAL_SECOND = config["update_interval"]
+
+command_receiver = CommandReceiver(
+    tension_temperature_sensor=lmt84,
+    relative_temperature_sensor=bme280_sensor,
+    pressure_sensor=bme280_sensor,
+    humidity_sensor=bme280_sensor,
+    light_sensor=light_sensor,
+    microphone_sensor=microphone_sensor,
+    particulate_matter_sensor=particulate_matter_sensor,
+    co2_sensor=co2_sensor,
+    update_interval_callback=update_fetch_interval,
+)
+
+MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
 log_queue = ["---", "---", "---"]
 
 try:

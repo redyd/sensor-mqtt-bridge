@@ -7,7 +7,7 @@ class CommandReceiver:
     # number corresponds to delivery guarantee:
     # 0 = very fast but unreliable, 1 = fast and moderately reliable, 2 = slow but very reliable
     SUBSCRIPTIONS = [
-        ("commands/status", 0),
+        ("commands/interval", 2),
     ]
 
     TENSION_TEMPERATURE_SENSOR: TensionTemperatureSensor
@@ -29,6 +29,7 @@ class CommandReceiver:
         microphone_sensor: MicrophoneSensor,
         particulate_matter_sensor: ParticulateMatterSensor,
         co2_sensor: Co2Sensor,
+        update_interval_callback=None,
     ):
         self.TENSION_TEMPERATURE_SENSOR = tension_temperature_sensor
         self.RELATIVE_TEMPERATURE_SENSOR = relative_temperature_sensor
@@ -38,12 +39,14 @@ class CommandReceiver:
         self.MICROPHONE_SENSOR = microphone_sensor
         self.PARTICULE_MATTER_SENSOR = particulate_matter_sensor
         self.CO2_CENSOR = co2_sensor
+        self._update_interval_callback = update_interval_callback
 
         self._handlers = {
-            "commands/status": {
-                "get_status": self._handle_get_status,
+            "commands/interval": {
+                "set_interval": self._handle_set_interval,
             },
         }
+        
 
     def handle(self, topic, payload):
         command = payload.get("command")
@@ -51,18 +54,21 @@ class CommandReceiver:
         handler = topic_handlers.get(command, self._handle_unknown)
         handler(payload)
 
-    def _handle_get_status(self, payload):
-        status = {
-            "relative_temperature": self.RELATIVE_TEMPERATURE_SENSOR.get_relative_temperature(),
-            "tension_temperature": self.TENSION_TEMPERATURE_SENSOR.get_tension_temperature(),
-            "pressure": self.PRESSURE_SENSOR.get_pressure(),
-            "humidity": self.HUMIDITY_SENSOR.get_humidity(),
-            "light": self.LIGHT_SENSOR.get_light(),
-            "sound_level": self.MICROPHONE_SENSOR.get_sound_level(),
-            "particulate_matter": self.PARTICULE_MATTER_SENSOR.get_particulate_matter(),
-            "co2": self.CO2_CENSOR.get_co2(),
-        }
-        print(f"Status: {status}")
+    def _handle_set_interval(self, payload):
+        interval = payload.get("interval")
+
+        if not isinstance(interval, (int, float)):
+            print(f"Invalid interval value: {payload}")
+            return
+
+        if interval <= 0:
+            print(f"Interval must be greater than zero: {interval}")
+            return
+
+        if self._update_interval_callback is not None:
+            self._update_interval_callback(interval)
+
+        print(f"Interval updated to {interval}s")
 
     def _handle_unknown(self, payload):
         print(f"Unknown command: {payload}")
