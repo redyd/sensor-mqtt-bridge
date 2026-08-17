@@ -9,8 +9,9 @@ class CommandReceiver:
     SUBSCRIPTIONS = [
         ("commands/status", 0),
     ]
-    
-    TEMPERATURE_SENSOR: TensionTemperatureSensor
+
+    TENSION_TEMPERATURE_SENSOR: TensionTemperatureSensor
+    RELATIVE_TEMPERATURE_SENSOR: RelativeTemperatureSensor
     PRESSURE_SENSOR: PressureSensor
     HUMIDITY_SENSOR: HumiditySensor
     LIGHT_SENSOR: LightSensor
@@ -20,7 +21,8 @@ class CommandReceiver:
 
     def __init__(
         self,
-        temperature_sensor: TensionTemperatureSensor,
+        tension_temperature_sensor: TensionTemperatureSensor,
+        relative_temperature_sensor: RelativeTemperatureSensor,
         pressure_sensor: PressureSensor,
         humidity_sensor: HumiditySensor,
         light_sensor: LightSensor,
@@ -28,14 +30,15 @@ class CommandReceiver:
         particulate_matter_sensor: ParticulateMatterSensor,
         co2_sensor: Co2Sensor,
     ):
-        self.TEMPERATURE_SENSOR = temperature_sensor
+        self.TENSION_TEMPERATURE_SENSOR = tension_temperature_sensor
+        self.RELATIVE_TEMPERATURE_SENSOR = relative_temperature_sensor
         self.PRESSURE_SENSOR = pressure_sensor
         self.HUMIDITY_SENSOR = humidity_sensor
         self.LIGHT_SENSOR = light_sensor
         self.MICROPHONE_SENSOR = microphone_sensor
         self.PARTICULE_MATTER_SENSOR = particulate_matter_sensor
         self.CO2_CENSOR = co2_sensor
-        
+
         self._handlers = {
             "commands/status": {
                 "get_status": self._handle_get_status,
@@ -50,7 +53,8 @@ class CommandReceiver:
 
     def _handle_get_status(self, payload):
         status = {
-            "temperature": self.TEMPERATURE_SENSOR.get_tension_temperature(),
+            "relative_temperature": self.RELATIVE_TEMPERATURE_SENSOR.get_relative_temperature(),
+            "tension_temperature": self.TENSION_TEMPERATURE_SENSOR.get_tension_temperature(),
             "pressure": self.PRESSURE_SENSOR.get_pressure(),
             "humidity": self.HUMIDITY_SENSOR.get_humidity(),
             "light": self.LIGHT_SENSOR.get_light(),

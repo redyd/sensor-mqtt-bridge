@@ -25,7 +25,8 @@ RED = "\033[31m"
 
 WIDTH = 58
 SENSOR_KEYS = [
-    "temperature",
+    "relative_temperature",
+    "tension_temperature",
     "pressure",
     "humidity",
     "light",
@@ -99,7 +100,8 @@ co2_sensor = sensors["scd30"]
 lmt84 = sensors["lmt84"]
 
 command_receiver = CommandReceiver(
-    temperature_sensor=bme280_sensor,
+    tension_temperature_sensor=lmt84,
+    relative_temperature_sensor=bme280_sensor,
     pressure_sensor=bme280_sensor,
     humidity_sensor=bme280_sensor,
     light_sensor=light_sensor,
