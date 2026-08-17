@@ -9,21 +9,9 @@ class Pms5003Sensor(ParticulateMatterSensor):
 
     def __init__(self):
         self._sensor = PMS5003()
-        self._particulate_average = {
-            "pm1_0": SlidingAverage(),
-            "pm2_5": SlidingAverage(),
-            "pm10": SlidingAverage(),
-        }
+        self._particulate_average = SlidingAverage()
 
-    def get_particulate_matter(self) -> tuple[dict, dict]:
+    def get_particulate_matter(self) -> tuple[float, float]:
         reading = self._sensor.read()
-        raw = {
-            "pm1_0": reading.pm_ug_per_m3(1.0),
-            "pm2_5": reading.pm_ug_per_m3(2.5),
-            "pm10": reading.pm_ug_per_m3(10),
-        }
-        smooth = {
-            key: self._particulate_average[key].add(value)
-            for key, value in raw.items()
-        }
-        return raw, smooth
+        raw = reading.pm_ug_per_m3(2.5)
+        return raw, self._particulate_average.add(raw)

@@ -1,12 +1,8 @@
 from typing import Protocol
 
 
-class TensionTemperatureSensor(Protocol):
-    def get_tension_temperature(self) -> tuple[float, float]: ...
-
-
-class RelativeTemperatureSensor(Protocol):
-    def get_relative_temperature(self) -> tuple[float, float]: ...
+class TemperatureSensor(Protocol):
+    def get_temperature(self) -> tuple[float, float]: ...
 
 
 class PressureSensor(Protocol):
@@ -26,7 +22,7 @@ class MicrophoneSensor(Protocol):
 
 
 class ParticulateMatterSensor(Protocol):
-    def get_particulate_matter(self) -> tuple[dict, dict]: ...
+    def get_particulate_matter(self) -> tuple[float, float]: ...
 
 
 class Co2Sensor(Protocol):

@@ -11,14 +11,13 @@ class CommandReceiver:
         ("commands/pause", 2),
     ]
 
-    TENSION_TEMPERATURE_SENSOR: TensionTemperatureSensor
-    RELATIVE_TEMPERATURE_SENSOR: RelativeTemperatureSensor
+    TEMPERATURE_SENSOR: TemperatureSensor
     PRESSURE_SENSOR: PressureSensor
     HUMIDITY_SENSOR: HumiditySensor
     LIGHT_SENSOR: LightSensor
     MICROPHONE_SENSOR: MicrophoneSensor
-    PARTICULE_MATTER_SENSOR: ParticulateMatterSensor
-    CO2_CENSOR: Co2Sensor
+    PARTICULATE_MATTER_SENSOR: ParticulateMatterSensor
+    CO2_SENSOR: Co2Sensor
 
     def __init__(
         self,

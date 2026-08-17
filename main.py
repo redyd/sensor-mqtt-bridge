@@ -25,8 +25,7 @@ RED = "\033[31m"
 
 WIDTH = 58
 SENSOR_KEYS = [
-    "relative_temperature",
-    "tension_temperature",
+    "temperature",
     "pressure",
     "humidity",
     "light",
@@ -38,9 +37,9 @@ SENSOR_KEYS = [
 
 def clear_screen():
     if platform.system() == "Windows":
-        os.system('cls')
+        os.system("cls")
     else:
-        os.system('clear')
+        os.system("clear")
 
 
 def print_header(interval, broker, port, status):
@@ -50,30 +49,34 @@ def print_header(interval, broker, port, status):
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
 
-def print_sensors_table(raw_data, smooth_data):
-    print(f"{BOLD}{'SENSOR':<20}{'RAW':>19}{'SMOOTH':>19}{RESET}")
+def print_sensors_table(values):
+    print(f"{BOLD}{'SENSOR':<20}{'RAW':>12}{'SMOOTH':>12}{'SCORE':>12}{RESET}")
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
     for key in SENSOR_KEYS:
-        raw_value = raw_data.get(key, "-")
-        smooth_value = smooth_data.get(key, "-")
-
-        if isinstance(raw_value, dict) or isinstance(smooth_value, dict):
-            print(f"{key:<20}")
-            sub_keys = raw_value.keys() if isinstance(raw_value, dict) else smooth_value.keys()
-            for sub_key in sub_keys:
-                sub_raw = raw_value.get(sub_key, "-") if isinstance(raw_value, dict) else "-"
-                sub_smooth = smooth_value.get(sub_key, "-") if isinstance(smooth_value, dict) else "-"
-                print(f"  {sub_key:<18}{str(sub_raw):>19}{str(sub_smooth):>19}")
-        else:
-            print(f"{key:<20}{str(raw_value):>19}{str(smooth_value):>19}")
+        reading = values.get(key, {})
+        raw_value = reading.get("raw", "-")
+        smooth_value = reading.get("smooth", "-")
+        score = reading.get("score", "-")
+        print(
+            f"{key:<20}"
+            f"{format_display_value(raw_value):>12}"
+            f"{format_display_value(smooth_value):>12}"
+            f"{format_display_value(score):>12}"
+        )
 
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
 
-def print_send_status(send_ok):
+def format_display_value(value):
+    if isinstance(value, (int, float)):
+        return f"{value:.2f}"
+    return str(value)
+
+
+def print_send_status(send_ok, score):
     status_color = GREEN if send_ok else RED
-    print(f"MQTT send: {status_color}{'OK' if send_ok else 'FAIL'}{RESET}")
+    print(f"MQTT send: {status_color}{'OK' if send_ok else 'FAIL'}{RESET} | score: {format_display_value(score)}")
 
 
 def print_log(log_queue):
@@ -84,10 +87,8 @@ def print_log(log_queue):
         print(f" {prefix} {log}")
 
 
-def send_sensor_data(mqtt_client, raw_data, smooth_data):
-    result1 = mqtt_client.send_data("sensors/raw_data", raw_data)
-    result2 = mqtt_client.send_data("sensors/smooth_data", smooth_data)
-    return result1 and result2
+def send_sensor_data(mqtt_client, payload):
+    return mqtt_client.send_data("sensors/data", payload)
 
 
 def update_fetch_interval(new_interval):
@@ -101,64 +102,72 @@ def toogle_pause(new_state):
     PAUSE = new_state
 
 
-config = load_config()
-sensors = init_all_sensors(config)
-
-bme280_sensor = sensors["bme280"]
-light_sensor = sensors["ltr559"]
-microphone_sensor = sensors["sph0645"]
-particulate_matter_sensor = sensors["pms5003"]
-co2_sensor = sensors["scd30"]
-lmt84 = sensors["lmt84"]
-
-sensors_exporter = SensorsExporter(
-    tension_temperature_sensor=lmt84,
-    relative_temperature_sensor=bme280_sensor,
-    pressure_sensor=bme280_sensor,
-    humidity_sensor=bme280_sensor,
-    light_sensor=light_sensor,
-    microphone_sensor=microphone_sensor,
-    particulate_matter_sensor=particulate_matter_sensor,
-    co2_sensor=co2_sensor,
-)
-
-FETCH_INTERVAL_SECOND = config["update_interval"]
+FETCH_INTERVAL_SECOND = None
 PAUSE = False
 
-command_receiver = CommandReceiver(
-    update_interval_callback=update_fetch_interval,
-    toggle_pause_callback=toogle_pause
-)
 
-MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
-log_queue = ["---", "---", "---"]
+def main():
+    global FETCH_INTERVAL_SECOND
 
-try:
-    while True:
-        clear_screen()
-        print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"], PAUSE)
-        
-        if PAUSE:
-            while PAUSE:
-                time.sleep(0.5)
-        
-        data = sensors_exporter.export()
-        raw_data = data["raw"]
-        smooth_data = data["smooth"]
-        
-        print_sensors_table(raw_data, smooth_data)
+    config = load_config()
+    sensors = init_all_sensors(config)
 
-        send_ok = send_sensor_data(MQTT_CLIENT, raw_data, smooth_data)
-        print_send_status(send_ok)
+    bme280_sensor = sensors["bme280"]
+    light_sensor = sensors["ltr559"]
+    microphone_sensor = sensors["sph0645"]
+    particulate_matter_sensor = sensors["pms5003"]
+    co2_sensor = sensors["scd30"]
+    lmt84 = sensors["lmt84"]
 
-        timestamp = time.strftime("%H:%M:%S")
-        log_queue.pop(0)
-        log_queue.append(f"Data sent at {timestamp}" if send_ok else f"Send failed at {timestamp}")
+    sensors_exporter = SensorsExporter(
+        temperature_sensors=[bme280_sensor, lmt84, co2_sensor],
+        pressure_sensors=[bme280_sensor],
+        humidity_sensors=[bme280_sensor, co2_sensor],
+        light_sensors=[light_sensor],
+        microphone_sensors=[microphone_sensor],
+        particulate_matter_sensors=[particulate_matter_sensor],
+        co2_sensors=[co2_sensor],
+    )
 
-        print_log(log_queue)
+    FETCH_INTERVAL_SECOND = config["update_interval"]
 
-        time.sleep(FETCH_INTERVAL_SECOND)
-except KeyboardInterrupt:
-    print("\nTerminating program...")
-    MQTT_CLIENT.close()
-    print("Done.")
+    command_receiver = CommandReceiver(
+        update_interval_callback=update_fetch_interval,
+        toggle_pause_callback=toogle_pause
+    )
+
+    mqtt_client = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
+    log_queue = ["---", "---", "---"]
+
+    try:
+        while True:
+            clear_screen()
+            print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"], PAUSE)
+
+            if PAUSE:
+                while PAUSE:
+                    time.sleep(0.5)
+
+            payload = sensors_exporter.export()
+            values = payload["values"]
+
+            print_sensors_table(values)
+
+            send_ok = send_sensor_data(mqtt_client, payload)
+            print_send_status(send_ok, payload.get("score", "-"))
+
+            timestamp = time.strftime("%H:%M:%S")
+            log_queue.pop(0)
+            log_queue.append(f"Data sent at {timestamp}" if send_ok else f"Send failed at {timestamp}")
+
+            print_log(log_queue)
+
+            time.sleep(FETCH_INTERVAL_SECOND)
+    except KeyboardInterrupt:
+        print("\nTerminating program...")
+        mqtt_client.close()
+        print("Done.")
+
+
+if __name__ == "__main__":
+    main()

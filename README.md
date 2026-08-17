@@ -126,18 +126,42 @@ The application will:
 Data format published to MQTT:
 ```json
 {
-  "timestamp": "2026-08-14T16:13:06.586810",
-  "temperature": 22.5,
-  "pressure": 1013.25,
-  "humidity": 45.6,
-  "light": 450.2,
-  "sound_level": 35.5,
-  "particulate_matter": {
-    "pm1_0": 5,
-    "pm2_5": 8,
-    "pm10": 12
+  "timestamp": "2026-08-17T12:00:00.000000",
+  "values": {
+    "temperature": {
+      "raw": 22.4,
+      "smooth": 22.1,
+      "score": 10
+    },
+    "pressure": {
+      "raw": 1012.8,
+      "smooth": 1012.4
+    },
+    "humidity": {
+      "raw": 48.0,
+      "smooth": 47.6,
+      "score": 10
+    },
+    "light": {
+      "raw": 300.0,
+      "smooth": 295.0
+    },
+    "sound_level": {
+      "raw": 0.03,
+      "smooth": 0.02
+    },
+    "particulate_matter": {
+      "raw": 8.0,
+      "smooth": 7.5,
+      "score": 10
+    },
+    "co2": {
+      "raw": 620.0,
+      "smooth": 610.0,
+      "score": 10
+    }
   },
-  "co2": 520.4
+  "score": 10
 }
 ```
 
@@ -176,6 +200,14 @@ Sensor data is automatically logged to `data/sensors.csv` with the following col
 - sound_level
 - particulate_matter
 - co2
+- score
+
+Only smoothed values are written to the CSV file, plus the global score:
+
+```csv
+timestamp,temperature,pressure,humidity,light,sound_level,particulate_matter,co2,score
+2026-08-17T12:00:00.000000,22.1,1012.4,47.6,295.0,0.02,7.5,610.0,10
+```
 
 ## Development
 
@@ -208,3 +240,99 @@ Start !
 ```bash
 python main.py
 ```
+
+
+Plusieurs gros changement structurels sont à faire. Actuellement, l'extraction de données se fait via des sensors avec protocole. Tous n'implémentent pas encore les bonnes méthode: commence par ça, ainsi que de nettoyer/fix les classes en erreurs.
+Ensuite, on va changer la manière dont on va envoyer les données: les sensors seront tous utilisés dans une classe, qui contiendra un set de chaque Protocole, le but étant de faire la moyenne arithmétique d'un ensemble de capteur afin d'avoir des valeurs plus cohérentes et des valeurs à exporter unique (plus de plusieurs température etc); si le set ne contient qu'un seul élement, alors on garde la valeur, et on passe les objets en "DI like" comme actuellement, sous forme de tableau depuis le main. 
+Cette nouvelle classe va permettre d'exporter les valeurs comme qui suit:
+
+[
+    {
+        "<type de valeur (temperature etc)>":
+            "raw": <valeur brute>,
+            "smooth": <valeur lissé>,
+            "score": <score associé, optionnel>
+    },
+    ...
+    "score": <score global>
+]
+
+Voici la manière de calculer le score:
+def calcul_score(temperature, humidite, co2, particules):
+
+    # -------------------------
+    # 1. SCORE HUMIDITE
+    # -------------------------
+    if 70 < humidite < 80:
+        hscore = 80 - humidite
+
+    elif 30 <= humidite <= 70:
+        hscore = 10
+
+    elif 20 < humidite < 30:
+        hscore = humidite - 20
+
+    else:
+        hscore = 0
+
+
+    # -------------------------
+    # 2. SCORE CO2
+    # -------------------------
+    if 0 <= co2 < 2500:
+        CO2score = 10
+
+    elif 2500 <= co2 <= 4500:
+        CO2score = (co2 - 4500) / -200
+
+    else:
+        CO2score = 0
+
+
+    # -------------------------
+    # 3. SCORE TEMPERATURE
+    # -------------------------
+    if 20 <= temperature <= 25:
+        Tscore = 10
+
+    elif 15 < temperature < 20:
+        Tscore = 2 * (temperature - 15)
+
+    elif 25 < temperature < 35:
+        Tscore = 35 - temperature
+
+    else:
+        Tscore = 0
+
+
+    # -------------------------
+    # 4. SCORE PARTICULES
+    # -------------------------
+    if 0 <= particules < 25:
+        Pscore = 10
+
+    elif 25 <= particules < 35:
+        Pscore = 35 - particules
+
+    else:
+        Pscore = 0
+
+
+    # -------------------------
+    # 5. SCORE FINAL
+    # -------------------------
+    indice_air = (
+        (Tscore  0.8)
+        + (CO2score  1)
+        + (Pscore  1)
+        + (hscore  0.8)
+    ) / (0.8 + 1 + 1 + 0.8)
+
+    return indice_air
+
+Le but est d'ensuite envoyer les données via MQTT, et de les sauvegarder en JSON.
+Je veux ABSOLUMENT que le code soit prore, clean architecture et pas de spaghetti. inspire toi de ce que j'ai déjà fait.
+
+NB:
+- Moyenne arithmétic en cas de multiple capteurs
+- Score de l'humidité, particule, température, CO2
