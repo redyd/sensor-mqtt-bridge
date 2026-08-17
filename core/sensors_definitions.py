@@ -8,6 +8,7 @@ class TensionTemperatureSensor(Protocol):
 class RelativeTemperatureSensor(Protocol):
     def get_relative_temperature(self) -> tuple[float, float]: ...
 
+
 class PressureSensor(Protocol):
     def get_pressure(self) -> tuple[float, float]: ...
 
