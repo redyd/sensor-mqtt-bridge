@@ -30,6 +30,10 @@ python -m pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
 
+Une fois déjà installé:
+- .\.venv\Scripts\Activate.ps1
+- python main.py
+
 Sur Raspberry Pi, installer aussi les dépendances système utiles:
 
 ```bash
