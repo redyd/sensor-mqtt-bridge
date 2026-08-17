@@ -43,9 +43,10 @@ def clear_screen():
         os.system('clear')
 
 
-def print_header(interval, broker, port):
+def print_header(interval, broker, port, status):
+    state = "pause" if status else "running"
     print(BANNER)
-    print(f"{DIM}interval: {interval}s | broker: {broker}:{port}{RESET}")
+    print(f"{DIM}status: {state} | interval: {interval}s | broker: {broker}:{port}{RESET}")
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
 
@@ -95,6 +96,11 @@ def update_fetch_interval(new_interval):
     return FETCH_INTERVAL_SECOND
 
 
+def toogle_pause(new_state):
+    global PAUSE
+    PAUSE = new_state
+
+
 config = load_config()
 sensors = init_all_sensors(config)
 
@@ -117,17 +123,11 @@ sensors_exporter = SensorsExporter(
 )
 
 FETCH_INTERVAL_SECOND = config["update_interval"]
+PAUSE = False
 
 command_receiver = CommandReceiver(
-    tension_temperature_sensor=lmt84,
-    relative_temperature_sensor=bme280_sensor,
-    pressure_sensor=bme280_sensor,
-    humidity_sensor=bme280_sensor,
-    light_sensor=light_sensor,
-    microphone_sensor=microphone_sensor,
-    particulate_matter_sensor=particulate_matter_sensor,
-    co2_sensor=co2_sensor,
     update_interval_callback=update_fetch_interval,
+    toggle_pause_callback=toogle_pause
 )
 
 MQTT_CLIENT = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
@@ -135,12 +135,17 @@ log_queue = ["---", "---", "---"]
 
 try:
     while True:
+        clear_screen()
+        print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"], PAUSE)
+        
+        if PAUSE:
+            while PAUSE:
+                time.sleep(0.5)
+        
         data = sensors_exporter.export()
         raw_data = data["raw"]
         smooth_data = data["smooth"]
-
-        clear_screen()
-        print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"])
+        
         print_sensors_table(raw_data, smooth_data)
 
         send_ok = send_sensor_data(MQTT_CLIENT, raw_data, smooth_data)

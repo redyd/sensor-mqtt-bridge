@@ -195,7 +195,7 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
-```
+```²
 
 Add user to I2C bus
 
@@ -208,11 +208,3 @@ Start !
 ```bash
 python main.py
 ```
-
-## TODO
-
-- [ ] Vérifier la conformité des types et formats de données avec le cahier des charges
-- [ ] Définir tous les topics MQTT et commandes: fréquences, bouton pause, bouton reset
-- [ ] Définir et implémenter le gestionnaire de réponses pour tous les topics et commandes
-- [ ] Intégrer au système de dashboard (interface de visualisation et de contrôle des données)
-- [X] Deux capteurs mesure la température (BME280 & LMT84) ?: utiliser les deux
