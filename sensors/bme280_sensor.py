@@ -8,7 +8,7 @@ from utils.sliding_average import SlidingAverage
 class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
     """BME280: temperature, pressure, and relative humidity."""
 
-    def __init__(self, port=1, address=0x76):
+    def __init__(self, port: int = 1, address: int = 0x76) -> None:
         self._bus = smbus2.SMBus(port)
         self._calibration_params = bme280.load_calibration_params(self._bus, address)
         self._address = address
@@ -16,7 +16,9 @@ class Bme280Sensor(TemperatureSensor, PressureSensor, HumiditySensor):
         self._pressure_average = SlidingAverage()
         self._humidity_average = SlidingAverage()
 
-    def _read(self):
+    def _read(self) -> object:
+        # returns a pimoroni-bme280 compensated reading object
+        # each getter triggers an independent I2C read
         return bme280.sample(self._bus, self._address, self._calibration_params)
 
     def get_temperature(self) -> tuple[float, float]:

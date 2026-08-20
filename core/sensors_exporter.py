@@ -9,11 +9,10 @@ from core.sensors_definitions import (
     MicrophoneSensor,
     ParticulateMatterSensor,
     PressureSensor,
+    SensorReading,
     TemperatureSensor,
 )
 from core.sensors_writer import DEFAULT_PATH, SensorsCsvWriter
-
-SensorReading = tuple[float, float]
 
 
 class SensorsExporter:
@@ -30,7 +29,7 @@ class SensorsExporter:
         co2_sensors: Sequence[Co2Sensor] | None = None,
         path: str = DEFAULT_PATH,
         writer: SensorsCsvWriter | None = None,
-        write_every: int = 1,
+        write_every: int = 1,  # write to CSV every N exports
     ):
         if write_every <= 0:
             raise ValueError("write_every must be greater than zero")
@@ -122,6 +121,7 @@ class SensorsExporter:
         return self._average(raw_values), self._average(smooth_values)
 
     def _add_scores(self, payload: dict) -> None:
+        # scores are only computed when all four required metrics are present
         values = payload["values"]
         required_keys = ("temperature", "humidity", "co2", "particulate_matter")
         if not all(key in values for key in required_keys):

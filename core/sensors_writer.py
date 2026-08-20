@@ -1,5 +1,6 @@
 import csv
 import os
+from typing import ClassVar
 
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.csv")
 
@@ -7,7 +8,7 @@ DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "sensors.cs
 class SensorsCsvWriter:
     """Write smoothed sensor values and the global score to a CSV file."""
 
-    FIELDNAMES = [
+    FIELDNAMES: ClassVar[list[str]] = [
         "timestamp",
         "temperature",
         "pressure",
@@ -27,7 +28,7 @@ class SensorsCsvWriter:
 
     def write(self, payload: dict) -> None:
         file_exists = os.path.isfile(self._path)
-        file_is_empty = not file_exists or os.path.getsize(self._path) == 0
+        file_is_empty = not file_exists or os.path.getsize(self._path) == 0  # write header only if file is new or empty
 
         with open(self._path, "a", newline="", encoding="utf-8") as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=self.FIELDNAMES)
@@ -35,7 +36,7 @@ class SensorsCsvWriter:
                 writer.writeheader()
             writer.writerow(self._build_row(payload))
 
-    def _build_row(self, payload: dict) -> dict:
+    def _build_row(self, payload: dict) -> dict[str, object]:
         values = payload["values"]
         row = {
             "timestamp": payload["timestamp"],

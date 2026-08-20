@@ -1,19 +1,19 @@
-from core.mqtt_client import MqttClient
-from core.command_receiver import CommandReceiver
-from core.sensors_exporter import SensorsExporter
-from utils.initializer import load_config, init_all_sensors
-import time
 import os
 import platform
+import time
 
+from core.command_receiver import CommandReceiver
+from core.mqtt_client import MqttClient
+from core.sensors_exporter import SensorsExporter
+from utils.initializer import init_all_sensors, load_config
 
-BANNER = r'''                                                                            
-   ___     ___    _  _     ___     ___     ___              ___     ___     ___     ___     ___     ___   
-  / __|   | __|  | \| |   / __|   / _ \   | _ \     o O O  | _ )   | _ \   |_ _|   |   \   / __|   | __|  
-  \__ \   | _|   | .` |   \__ \  | (_) |  |   /    o       | _ \   |   /    | |    | |) | | (_ |   | _|   
-  |___/   |___|  |_|\_|   |___/   \___/   |_|_\   TS__[O]  |___/   |_|_\   |___|   |___/   \___|   |___|  
-_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""| {======|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""| 
-"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'./o--000'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-' 
+BANNER = r'''
+   ___     ___    _  _     ___     ___     ___              ___     ___     ___     ___     ___     ___
+  / __|   | __|  | \| |   / __|   / _ \   | _ \     o O O  | _ )   | _ \   |_ _|   |   \   / __|   | __|
+  \__ \   | _|   | .` |   \__ \  | (_) |  |   /    o       | _ \   |   /    | |    | |) | | (_ |   | _|
+  |___/   |___|  |_|\_|   |___/   \___/   |_|_\   TS__[O]  |___/   |_|_\   |___|   |___/   \___|   |___|
+_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""| {======|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
+"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'./o--000'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'
 '''
 
 RESET = "\033[0m"
@@ -35,21 +35,21 @@ SENSOR_KEYS = [
 ]
 
 
-def clear_screen():
+def clear_screen() -> None:
     if platform.system() == "Windows":
         os.system("cls")
     else:
         os.system("clear")
 
 
-def print_header(interval, broker, port, status):
+def print_header(interval: float, broker: str, port: int, status: bool) -> None:
     state = "pause" if status else "running"
     print(BANNER)
     print(f"{DIM}status: {state} | interval: {interval}s | broker: {broker}:{port}{RESET}")
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
 
-def print_sensors_table(values):
+def print_sensors_table(values: dict) -> None:
     print(f"{BOLD}{'SENSOR':<20}{'RAW':>12}{'SMOOTH':>12}{'SCORE':>12}{RESET}")
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
@@ -68,18 +68,18 @@ def print_sensors_table(values):
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
 
 
-def format_display_value(value):
+def format_display_value(value: float | str) -> str:
     if isinstance(value, (int, float)):
         return f"{value:.2f}"
     return str(value)
 
 
-def print_send_status(send_ok, score):
+def print_send_status(send_ok: bool, score: float | str) -> None:
     status_color = GREEN if send_ok else RED
     print(f"MQTT send: {status_color}{'OK' if send_ok else 'FAIL'}{RESET} | score: {format_display_value(score)}")
 
 
-def print_log(log_queue):
+def print_log(log_queue: list[str]) -> None:
     print(f"\n{BOLD}LOG{RESET}")
     print(f"{CYAN}{'-' * WIDTH}{RESET}")
     for i, log in enumerate(log_queue):
@@ -87,17 +87,17 @@ def print_log(log_queue):
         print(f" {prefix} {log}")
 
 
-def send_sensor_data(mqtt_client, payload):
+def send_sensor_data(mqtt_client: MqttClient, payload: dict) -> bool:
     return mqtt_client.send_data("sensors/data", payload)
 
 
-def update_fetch_interval(new_interval):
+def update_fetch_interval(new_interval: float) -> float:
     global FETCH_INTERVAL_SECOND
     FETCH_INTERVAL_SECOND = new_interval
     return FETCH_INTERVAL_SECOND
 
 
-def toogle_pause(new_state):
+def toogle_pause(new_state: bool) -> None:
     global PAUSE
     PAUSE = new_state
 
@@ -137,7 +137,7 @@ def main():
     )
 
     mqtt_client = MqttClient(config["mqtt_broker"], config["mqtt_port"], command_receiver)
-    log_queue = ["---", "---", "---"]
+    log_queue = ["---", "---", "---"]  # rolling log of the last 3 send results
 
     try:
         while True:
@@ -145,6 +145,7 @@ def main():
             print_header(FETCH_INTERVAL_SECOND, config["mqtt_broker"], config["mqtt_port"], PAUSE)
 
             if PAUSE:
+                # spin-wait until resumed by a MQTT command
                 while PAUSE:
                     time.sleep(0.5)
 

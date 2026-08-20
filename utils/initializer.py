@@ -4,10 +4,10 @@ import json
 import os
 import platform
 import sys
+
 from fakes.mock_sensor import MockSensor
 
-
-SENSOR_DEPENDENCIES = {
+SENSOR_DEPENDENCIES: dict[str, tuple[str, str]] = {
     "bme280": ("sensors.bme280_sensor", "Bme280Sensor"),
     "ltr559": ("sensors.ltr559_sensor", "Ltr559Sensor"),
     "sph0645": ("sensors.sph0645_sensor", "Sph0645Sensor"),
@@ -17,7 +17,7 @@ SENSOR_DEPENDENCIES = {
 }
 
 
-def load_config():
+def load_config() -> dict:
     """Load configuration from config.json or use default values."""
     config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
     if os.path.exists(config_path):
@@ -38,13 +38,13 @@ def load_config():
     }
 
 
-def load_sensor_class(sensor_key):
+def load_sensor_class(sensor_key: str) -> type:
     module_name, class_name = SENSOR_DEPENDENCIES[sensor_key]
     module = __import__(module_name, fromlist=[class_name])
     return getattr(module, class_name)
 
 
-def init_sensor(sensor_key, enabled=True):
+def init_sensor(sensor_key: str, enabled: bool = True) -> object:
     module_name, class_name = SENSOR_DEPENDENCIES[sensor_key]
 
     if not enabled:
@@ -54,13 +54,13 @@ def init_sensor(sensor_key, enabled=True):
     if platform.system() == "Windows":
         print(f"! {class_name} uses hardware dependencies unavailable on Windows. Using MockSensor.")
         return MockSensor()
-    
+
     try:
         sensor_class = load_sensor_class(sensor_key)
         sensor = sensor_class()
         print(f"{sensor_class.__name__} initialized successfully.")
         return sensor
-    except BaseException as error:
+    except BaseException as error:  # catch hardware errors (ImportError, OSError, etc.)
         print(f"\nFATAL ERROR: {class_name} is ENABLED but unavailable!")
         print(f"Error details: {error}")
         print("\nTo fix this issue:")
@@ -69,11 +69,11 @@ def init_sensor(sensor_key, enabled=True):
         sys.exit(1)
 
 
-def init_all_sensors(config):
+def init_all_sensors(config: dict) -> dict[str, object]:
     enabled = config["enabled_sensors"]
-    
+
     print("\n=== Sensor Initialization ===\n")
-    
+
     sensors = {
         "bme280": init_sensor("bme280", enabled["bme280"]),
         "ltr559": init_sensor("ltr559", enabled["ltr559"]),
@@ -82,7 +82,7 @@ def init_all_sensors(config):
         "scd30": init_sensor("scd30", enabled["scd30"]),
         "lmt84": init_sensor("lmt84", enabled["lmt84"])
     }
-    
+
     print("\n=== All sensors initialized ===\n")
-    
+
     return sensors
