@@ -147,8 +147,8 @@
         "colorTrack": "",
         "colorThumb": "",
         "showTextField": false,
-        "x": 380,
-        "y": 100,
+        "x": 220,
+        "y": 700,
         "wires": [
             [
                 "19eef5d3d4b95a12"
@@ -169,8 +169,8 @@
         "correl": "",
         "expiry": "",
         "broker": "610404fa11e6208f",
-        "x": 800,
-        "y": 100,
+        "x": 640,
+        "y": 700,
         "wires": []
     },
     {
@@ -185,8 +185,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 100,
+        "x": 420,
+        "y": 700,
         "wires": [
             [
                 "7e771765977debd6"
@@ -376,7 +376,7 @@
         "type": "ui-switch",
         "z": "f6f2187d.f17ca8",
         "name": "Pause toggle",
-        "label": "Paused",
+        "label": "Pause",
         "group": "0ce9d273c4a1de59",
         "order": 2,
         "width": 0,
@@ -397,8 +397,8 @@
         "offvalueType": "bool",
         "officon": "",
         "offcolor": "",
-        "x": 390,
-        "y": 160,
+        "x": 230,
+        "y": 760,
         "wires": [
             [
                 "2f87f02beb4ba0af"
@@ -419,8 +419,8 @@
         "correl": "",
         "expiry": "",
         "broker": "610404fa11e6208f",
-        "x": 810,
-        "y": 160,
+        "x": 650,
+        "y": 760,
         "wires": []
     },
     {
@@ -435,8 +435,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 160,
+        "x": 420,
+        "y": 760,
         "wires": [
             [
                 "bd4931f16488e0c9"
@@ -572,7 +572,7 @@
         "type": "ui-chart",
         "z": "f6f2187d.f17ca8",
         "group": "12be3deb18432962",
-        "name": "co2",
+        "name": "Co2",
         "label": "Live CO2",
         "order": 1,
         "chartType": "line",
@@ -727,8 +727,8 @@
         "type": "ui-button",
         "z": "f6f2187d.f17ca8",
         "group": "0ce9d273c4a1de59",
-        "name": "on/off",
-        "label": "effacer l'historique ",
+        "name": "Clear",
+        "label": "Clear history",
         "order": 1,
         "width": 0,
         "height": 0,
@@ -753,8 +753,8 @@
         "enablePointerup": false,
         "pointerupPayload": "",
         "pointerupPayloadType": "str",
-        "x": 810,
-        "y": 920,
+        "x": 870,
+        "y": 900,
         "wires": [
             [
                 "fc23ff849b7ee567",
@@ -1134,7 +1134,7 @@
         }
     },
     {
-        "id": "4ad94cd3cd70045d",
+        "id": "686314b56c010198",
         "type": "global-config",
         "env": [],
         "modules": {
